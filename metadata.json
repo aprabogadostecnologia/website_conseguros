@@ -1,0 +1,6 @@
+{
+  "name": "Conseguros",
+  "description": "Asesoría de seguros proactiva, transparente y cercana.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
