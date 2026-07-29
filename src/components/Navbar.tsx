@@ -66,12 +66,7 @@ export default function Navbar({ onOpenWizard, onSaveConsultation, onOpenSiniest
             <span className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/30 to-transparent -translate-x-full group-hover:animate-[none] transition-transform duration-1000 ease-out-in" style={{ transform: "translateX(-100%)", transition: "transform 0.6s ease" }} />
             <span className="absolute inset-0 w-[200%] h-full bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-[100%] group-hover:translate-x-[100%] transition-transform duration-1000 ease-out" />
             
-            <span className="relative flex h-1.5 w-1.5 mr-1.5">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-85"></span>
-              <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-white"></span>
-            </span>
-            <ShieldAlert className="w-3.5 h-3.5 mr-1 shrink-0 transition-transform duration-300 group-hover:scale-110 group-hover:rotate-12" />
-            <span className="relative z-10">¿Tuviste un siniestro?</span>
+            <span className="relative z-10">¿Tuviste un accidente?</span>
           </button>
 
           <button

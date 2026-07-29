@@ -12,6 +12,8 @@ import QuestionsAndContactSection from "./components/QuestionsAndContactSection"
 import SiniestroModal from "./components/SiniestroModal";
 import ServiceDetailsModal, { ServiceDetail } from "./components/ServiceDetailsModal";
 import HeroWebGLBackground from "./components/HeroWebGLBackground";
+import NosotrosParallaxGallery from "./components/NosotrosParallaxGallery";
+import TrajectoryStats from "./components/TrajectoryStats";
 
 // Import new modular Hero slider components
 import HeroSlideWelcome from "./components/HeroSlideWelcome";
@@ -156,7 +158,7 @@ const SERVICES_DATA: ServiceDetail[] = [
 const SERVICE_IMAGES: Record<string, string> = {
   multirriesgo: "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&q=80&w=800",
   rce: "https://images.unsplash.com/photo-1589829545856-d10d557cf95f?auto=format&fit=crop&q=80&w=800",
-  vehiculos: "https://images.unsplash.com/photo-1549399542-7e3f8b79c341?auto=format&fit=crop&q=80&w=800",
+  vehiculos: "https://images.unsplash.com/photo-1601362840469-51e4d8d58785?auto=format&fit=crop&q=80&w=800",
   salud: "https://images.unsplash.com/photo-1576091160550-2173dba999ef?auto=format&fit=crop&q=80&w=800",
   ciberseguridad: "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&q=80&w=800"
 };
@@ -325,7 +327,7 @@ export default function App() {
       />
 
       {/* 2. Hero Presentation Area */}
-      <main className={`relative bg-white ${currentHeroSlide === 0 ? "overflow-visible" : "overflow-hidden px-4 sm:px-8 md:px-16 h-[calc(100vh-64px)] md:h-[calc(100vh-80px)] min-h-[620px] flex flex-col justify-between pt-4 pb-20 md:pb-24"}`}>
+      <main className={`relative bg-white ${currentHeroSlide === 0 ? "overflow-visible" : "overflow-visible px-4 sm:px-8 md:px-16 min-h-[max(620px,min(calc(100vh-64px),820px))] md:min-h-[max(620px,min(calc(100vh-80px),820px))] flex flex-col justify-between pt-4 pb-20 md:pb-24"}`}>
         {/* Kinetic WebGL background backdrop */}
         {currentHeroSlide !== 0 && (
           <HeroWebGLBackground activeSlide={currentHeroSlide} />
@@ -333,7 +335,7 @@ export default function App() {
 
         {/* Ambient overlay wrapper with dark gradient mask */}
         {currentHeroSlide !== 0 && (
-          <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/40 to-slate-950/60 pointer-events-none z-0" />
+          <div className="absolute inset-0 bg-gradient-to-t from-slate-950/70 via-slate-950/15 to-slate-950/30 pointer-events-none z-0" />
         )}
 
         <div className={`relative z-10 w-full ${currentHeroSlide === 0 ? "" : "flex-1 flex items-center"}`}>
@@ -427,30 +429,35 @@ export default function App() {
               {/* Opción de Volver al Inicio */}
               <button
                 onClick={() => setCurrentHeroSlide(0)}
-                className="py-2.5 px-5 rounded-full flex items-center space-x-2 transition-all cursor-pointer text-xs md:text-sm text-brand-blue hover:text-white font-bold bg-blue-500/10 hover:bg-brand-blue/30 border border-brand-blue/30 shadow-lg shadow-blue-500/5 hover:scale-102"
+                className="w-44 py-2.5 px-5 rounded-full flex items-center justify-center space-x-2 transition-all cursor-pointer text-xs md:text-sm text-orange-300 hover:text-white font-bold bg-orange-500/15 hover:bg-[#FF8D36]/80 border border-orange-400/40 shadow-lg shadow-orange-500/10 hover:scale-102"
               >
-                <span className="text-xs font-black text-brand-blue">← 01</span>
+                <span className="text-xs font-black">← 01</span>
                 <span>Inicio</span>
               </button>
 
               {[
-                { id: 1, tag: "02", name: "Carro & Moto", icon: Car, bg: "hover:border-emerald-500/30 hover:bg-emerald-500/5", textColor: "hover:text-emerald-400" },
-                { id: 2, tag: "03", name: "Empresarial", icon: Building2, bg: "hover:border-blue-500/30 hover:bg-blue-500/5", textColor: "hover:text-blue-400" },
-                { id: 3, tag: "04", name: "Salud", icon: HeartPulse, bg: "hover:border-teal-500/30 hover:bg-teal-500/5", textColor: "hover:text-teal-400" },
-                { id: 4, tag: "05", name: "ARL", icon: ShieldCheck, bg: "hover:border-indigo-500/30 hover:bg-indigo-500/5", textColor: "hover:text-indigo-400" }
-              ].filter((slide) => slide.id !== currentHeroSlide).map((slide) => {
+                { id: 1, tag: "02", name: "Carro & Moto", icon: Car, bg: "hover:border-emerald-500/30 hover:bg-emerald-500/5", textColor: "hover:text-emerald-400", activeBg: "border-emerald-500/40 bg-emerald-500/10 shadow-[0_0_20px_rgba(16,185,129,0.25)]", activeText: "text-emerald-400", activeIconBg: "bg-emerald-500/20" },
+                { id: 2, tag: "03", name: "Empresarial", icon: Building2, bg: "hover:border-blue-500/30 hover:bg-blue-500/5", textColor: "hover:text-blue-400", activeBg: "border-blue-500/40 bg-blue-500/10 shadow-[0_0_20px_rgba(59,130,246,0.25)]", activeText: "text-blue-400", activeIconBg: "bg-blue-500/20" },
+                { id: 3, tag: "04", name: "Salud", icon: HeartPulse, bg: "hover:border-teal-500/30 hover:bg-teal-500/5", textColor: "hover:text-teal-400", activeBg: "border-teal-500/40 bg-teal-500/10 shadow-[0_0_20px_rgba(45,212,191,0.25)]", activeText: "text-teal-400", activeIconBg: "bg-teal-500/20" },
+                { id: 4, tag: "05", name: "ARL", icon: ShieldCheck, bg: "hover:border-indigo-500/30 hover:bg-indigo-500/5", textColor: "hover:text-indigo-400", activeBg: "border-indigo-500/40 bg-indigo-500/10 shadow-[0_0_20px_rgba(99,102,241,0.25)]", activeText: "text-indigo-400", activeIconBg: "bg-indigo-500/20" }
+              ].map((slide) => {
                 const IconComponent = slide.icon;
+                const isActive = slide.id === currentHeroSlide;
                 return (
                   <button
                     key={slide.id}
                     onClick={() => setCurrentHeroSlide(slide.id)}
-                    className={`py-2 px-4 rounded-2xl flex items-center space-x-3 transition-all cursor-pointer text-xs md:text-sm text-slate-300 font-semibold bg-slate-900/40 border border-white/5 ${slide.bg} ${slide.textColor} hover:scale-102`}
+                    className={`w-44 py-2 px-4 rounded-2xl flex items-center space-x-3 transition-all cursor-pointer text-xs md:text-sm font-semibold border ${
+                      isActive
+                        ? `${slide.activeBg} ${slide.activeText} scale-102`
+                        : `text-slate-300 bg-slate-900/40 border-white/5 ${slide.bg} ${slide.textColor} hover:scale-102`
+                    }`}
                   >
-                    <div className="w-6 h-6 rounded-lg bg-white/5 flex items-center justify-center">
+                    <div className={`w-6 h-6 rounded-lg flex items-center justify-center transition-colors ${isActive ? slide.activeIconBg : "bg-white/5"}`}>
                       <IconComponent className="w-3.5 h-3.5" />
                     </div>
                     <div className="text-left">
-                      <span className="text-[10px] font-black text-slate-500 block leading-none mb-0.5">{slide.tag}</span>
+                      <span className={`text-[10px] font-black block leading-none mb-0.5 ${isActive ? "opacity-70" : "text-slate-500"}`}>{slide.tag}</span>
                       <span className="font-bold">{slide.name}</span>
                     </div>
                   </button>
@@ -482,13 +489,13 @@ export default function App() {
           <div className="absolute bottom-0 left-0 w-full overflow-hidden leading-[0] select-none pointer-events-none z-20">
             <svg className="relative block w-[calc(100%+1.3px)] h-[40px] md:h-[64px]" viewBox="0 0 1200 120" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
               {/* Soft background wave layer */}
-              <path 
-                d="M321.39,56.44c58-10.79,114.16-30.13,172-41.86,82.39-16.72,168.19-17.73,250.45-.39C823.78,31,906.67,72,985.66,92.83c70.05,18.48,146.53,26.09,214.34,3v80H0V0C26.9,8.75,53.05,22,79.54,34c61.64,28,125,51.34,198.85,58.33A516.86,516.86,0,0,0,321.39,56.44Z" 
+              <path
+                d="M0,70 C300,0 900,130 1200,40 L1200,120 L0,120 Z"
                 className="fill-[#121ccf]/10"
               ></path>
               {/* Front main wave layer */}
-              <path 
-                d="M985.66,92.83C906.67,72,823.78,31,743.84,15.61c-82.26-15.65-168.13-14.64-250.45.39-57.84,11.73-114,31.07-172,41.86A516.86,516.86,0,0,1,0,34V120H1200V95.83C1132.19,118.92,1055.71,111.31,985.66,92.83Z" 
+              <path
+                d="M0,32 C300,110 900,-10 1200,68 L1200,120 L0,120 Z"
                 className="fill-[#121ccf]"
               ></path>
             </svg>
@@ -499,7 +506,7 @@ export default function App() {
 
 
       {/* 4. "Why Choose Us" section with statistical numeric metrics */}
-      <section className="px-8 md:px-16 bg-white pt-10 md:pt-14 lg:pt-16 pb-16 md:pb-20 lg:pb-24" id="nosotros">
+      <section className="px-8 md:px-16 bg-white pt-8 md:pt-10 lg:pt-12 pb-12 md:pb-14 lg:pb-16" id="nosotros">
         <div className="max-w-7xl mx-auto">
           <div className="grid lg:grid-cols-2 items-center gap-16 lg:gap-32 mb-16 md:mb-20">
             
@@ -527,81 +534,22 @@ export default function App() {
               </div>
             </div>
 
-            {/* Right Side Illustration */}
+            {/* Right Side Illustration: 3D rotating value cube (6 faces / 6 photos) */}
             <div className="flex justify-center items-center">
-              <div className="relative max-w-4xl w-full flex justify-center">
-                <div className="absolute -top-4 right-4 bg-white/90 px-4.5 py-2.5 rounded-full text-xs font-bold text-brand-blue tracking-wide border border-[#121ccf]/10 shadow-3xs flex items-center z-10 backdrop-blur-xs">
-                  <Sparkles className="w-4.5 h-4.5 mr-2" />
-                  Valores Conseguros
-                </div>
-                <img
-                  alt="Nuestros valores"
-                  referrerPolicy="no-referrer"
-                  className="max-w-4xl w-full h-auto object-contain select-none drop-shadow-md transition-transform hover:scale-[1.02] duration-500"
-                  src="https://lh3.googleusercontent.com/aida-public/AB6AXuAa3WsT5q8FymJv29-q8h2LM-eCDqKHS5jnnWsTfacPKcyH1PAm1IYGrfM8L41RKIXUvWPd0EwALYj4lAvYxb-KzkjUsT3F2yHSfTOXEoCiJwdUMWgnqbLsj8pMJP_SLZwR2YPszH-OI1lgZ73dOYgeeHpT_nrktHfNhSmXMhBOH-CFP8qJGs5yASLJzltSm59s1xyluL4-u3fB3AD0tgNdZsASEXfDuLKPOY9Sac1zBgRjmpmooyPynOEsx5dfYhVdIydAwR3E7IE"
-                />
+              <div className="relative flex justify-center">
+                <NosotrosParallaxGallery />
               </div>
             </div>
-
-          </div>
-
-          {/* Core Numerical Stats counters */}
-          <div className="mt-32 mb-16 text-center">
-            <span className="text-brand-blue font-extrabold tracking-[0.25em] text-xs md:text-sm uppercase block mb-3">
-              Nuestra Trayectoria en Cifras
-            </span>
-            <h3 className="text-3xl md:text-4xl font-black text-[#0f1740] tracking-tight max-w-2xl mx-auto leading-tight">
-              Resultados reales de un equipo comprometido con tu tranquilidad
-            </h3>
-            <p className="text-xs md:text-sm text-gray-500 max-w-xl mx-auto mt-3 leading-relaxed">
-              La experiencia acumulada y la satisfacción de nuestros asegurados respaldan la excelencia e integridad de cada una de nuestras asesorías.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-10 text-center">
-            
-            <motion.div 
-              whileHover={{ scale: 1.03 }} 
-              className="space-y-2 py-4 md:py-6 transition-all duration-300"
-            >
-              <div className="text-7xl md:text-8xl lg:text-9xl font-black text-brand-blue tracking-tighter">
-                +35
-              </div>
-              <div className="text-slate-600 font-extrabold uppercase tracking-[0.2em] text-xs md:text-sm">
-                Años de experiencia
-              </div>
-            </motion.div>
-
-            <motion.div 
-              whileHover={{ scale: 1.03 }}
-              className="space-y-2 py-4 md:py-6 transition-all duration-300"
-            >
-              <div className="text-7xl md:text-8xl lg:text-9xl font-black text-[#0f1740] tracking-tighter">
-                57
-              </div>
-              <div className="text-slate-600 font-extrabold uppercase tracking-[0.2em] text-xs md:text-sm">
-                Clientes felices
-              </div>
-            </motion.div>
-
-            <motion.div 
-              whileHover={{ scale: 1.03 }}
-              className="space-y-2 py-4 md:py-6 transition-all duration-300"
-            >
-              <div className="text-7xl md:text-8xl lg:text-9xl font-black text-[#FF8A65] tracking-tighter">
-                +84
-              </div>
-              <div className="text-slate-600 font-extrabold uppercase tracking-[0.2em] text-xs md:text-sm">
-                Procesos exitosos
-              </div>
-            </motion.div>
 
           </div>
         </div>
       </section>
 
+      {/* 4.4 "Nuestra Trayectoria en Cifras" — standalone stats band with scroll count-up */}
+      <TrajectoryStats />
+
       {/* 4.5 "Nuestros Servicios de Cobertura" Section */}
-      <section className="py-16 md:py-20 lg:py-24 px-8 md:px-16 bg-white" id="nuestros-servicios">
+      <section className="py-12 md:py-14 lg:py-16 px-8 md:px-16 bg-white" id="nuestros-servicios">
         <div className="max-w-7xl mx-auto">
           
           <div className="text-center mb-16">
@@ -715,7 +663,7 @@ export default function App() {
       </section>
 
       {/* 5. "Cotiza" Section with Dynamic Premium Calculator */}
-      <section className="py-20 md:py-24 px-8 md:px-16 bg-slate-50/70 relative overflow-hidden" id="cotizar">
+      <section className="py-14 md:py-16 px-8 md:px-16 bg-slate-50/70 relative overflow-hidden" id="cotizar">
         {/* Elegante Divisor Curvo Superior */}
         <div className="absolute top-0 left-0 w-full overflow-hidden leading-[0] select-none pointer-events-none transform rotate-180 z-20">
           <svg className="relative block w-[calc(100%+1.3px)] h-[40px] md:h-[64px]" viewBox="0 0 1200 120" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
@@ -763,7 +711,7 @@ export default function App() {
       <QuestionsAndContactSection onSaveConsultation={handleSaveRequest} />
 
       {/* 9. Branded Footer */}
-      <footer className="bg-brand-blue py-16 px-8 md:px-16 text-white border-t border-[#1b25cd]">
+      <footer className="bg-brand-blue py-12 px-8 md:px-16 text-white border-t border-[#1b25cd]">
         <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-12 gap-10 md:gap-16 items-start">
           
           {/* Col 1: Logo & Tagline (takes 5 cols) */}
@@ -850,7 +798,7 @@ export default function App() {
             </div>
             <div className="text-xs text-blue-100 font-semibold space-y-1.5 text-center md:text-left">
               <p>📍 AK 15 #88-66, piso 2, Bogotá, Col</p>
-              <p>📧 contacto@conseguros.com</p>
+              <p>📧 santiago@conseguros.com.co</p>
             </div>
           </div>
 

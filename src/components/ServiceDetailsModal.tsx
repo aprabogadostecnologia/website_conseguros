@@ -158,8 +158,8 @@ export default function ServiceDetailsModal({ isOpen, onClose, service, onSaveCo
                   value={email}
                   disabled={saved}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-2xl pl-4 pr-32 py-3.5 text-sm text-[#0F1740] focus:ring-1 focus:ring-brand-blue outline-none transition-all placeholder:text-gray-400"
-                  placeholder="ejemplo@correo-empresa.com"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-2xl pl-4 pr-26 py-3.5 text-sm text-[#0F1740] focus:ring-1 focus:ring-brand-blue outline-none transition-all placeholder:text-gray-400"
+                  placeholder="tu@empresa.com"
                 />
                 <button
                   type="submit"
@@ -168,7 +168,7 @@ export default function ServiceDetailsModal({ isOpen, onClose, service, onSaveCo
                     saved ? "bg-emerald-600" : "bg-brand-blue hover:bg-blue-800"
                   }`}
                 >
-                  {saved ? "Solicitado ✓" : "Solicitar portafolio"}
+                  {saved ? "Enviado ✓" : "Solicitar"}
                 </button>
               </div>
             </form>
@@ -205,24 +205,6 @@ export default function ServiceDetailsModal({ isOpen, onClose, service, onSaveCo
                 {service.details.deductibles}
               </p>
             </div>
-
-            {/* Insurer alliance list */}
-            <div>
-              <span className="text-xs font-black text-slate-400 uppercase tracking-widest block mb-2.5">
-                Aseguradoras suscriptoras recomendadas:
-              </span>
-              <div className="flex flex-wrap gap-2">
-                {service.details.allies.map((ally, index) => (
-                  <span 
-                    key={index}
-                    className="bg-white border border-slate-200/80 text-slate-700 text-sm font-bold px-3 py-1.5 rounded-xl shadow-3xs"
-                  >
-                    {ally}
-                  </span>
-                ))}
-              </div>
-            </div>
-
           </div>
 
           {/* Quick advice note */}

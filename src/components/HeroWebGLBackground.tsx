@@ -20,7 +20,7 @@ export default function HeroWebGLBackground({ activeSlide }: HeroWebGLBackground
 
     // Use WebGL context (with fallback to 2D in case WebGL is blocked or unsupported)
     const gl = canvas.getContext("webgl", { alpha: false, depth: false, antialias: true }) ||
-               canvas.getContext("experimental-webgl", { alpha: false, depth: false, antialias: true });
+               (canvas.getContext("experimental-webgl", { alpha: false, depth: false, antialias: true }) as WebGLRenderingContext | null);
 
     if (!gl) {
       console.warn("WebGL not supported; falling back to 2D context background.");
@@ -28,6 +28,14 @@ export default function HeroWebGLBackground({ activeSlide }: HeroWebGLBackground
     }
 
     let animationFrameId = 0;
+
+    // Guards against image.onload firing for a mount that's already been cleaned up (e.g. React
+    // StrictMode's dev-only mount→cleanup→remount, or a fast Inicio→category→Inicio round-trip).
+    // Without this, an orphaned onload can still fire after its own texture object was deleted;
+    // bindTexture on a deleted texture silently no-ops, so the subsequent texImage2D uploads that
+    // orphaned photo into whatever texture happens to still be bound from the CURRENT active
+    // render loop instead — clobbering the correct, currently-displayed photo with a stale one.
+    let isCancelled = false;
 
     // Helper to load WebGL textures with automatic flipY and crossOrigin support
     const loadTexture = (glContext: WebGLRenderingContext, url: string) => {
@@ -50,6 +58,7 @@ export default function HeroWebGLBackground({ activeSlide }: HeroWebGLBackground
       const image = new Image();
       image.crossOrigin = "anonymous";
       image.onload = () => {
+        if (isCancelled) return;
         glContext.bindTexture(glContext.TEXTURE_2D, texture);
         glContext.pixelStorei(glContext.UNPACK_FLIP_Y_WEBGL, true); // Flip images vertically for correct orientation
         glContext.texImage2D(glContext.TEXTURE_2D, level, internalFormat,
@@ -68,9 +77,15 @@ export default function HeroWebGLBackground({ activeSlide }: HeroWebGLBackground
     const tex0 = loadTexture(gl, "https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=1200&q=80");
     const tex1 = loadTexture(gl, "https://images.unsplash.com/photo-1617788138017-80ad40651399?auto=format&fit=crop&w=1200&q=80");
     const tex2 = loadTexture(gl, "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=1200&q=80");
-    const tex3 = loadTexture(gl, "https://images.unsplash.com/photo-1505751172876-fa1923c5c528?auto=format&fit=crop&w=1200&q=80");
+    const tex3 = loadTexture(gl, "https://images.unsplash.com/photo-1579684385127-1ef15d508118?auto=format&fit=crop&w=1200&h=675&q=80");
     const tex4 = loadTexture(gl, "https://images.unsplash.com/photo-1504307651254-35680f356dfd?auto=format&fit=crop&w=1200&q=80");
-    
+
+    // Indexed by slide number (0..4). The fragment shader only ever samples two fixed
+    // texture units (old/new); which underlying photo backs each unit is decided here in
+    // JS, not via GLSL branching on a slide-index uniform (some mobile GPU/driver
+    // combinations mis-evaluate conditional sampler selection in fragment shaders).
+    const textures = [tex0, tex1, tex2, tex3, tex4];
+
     // Shader Source Code
     // Vertex Shader: Standard Fullscreen Pass-through
     const vsSource = `
@@ -84,7 +99,7 @@ export default function HeroWebGLBackground({ activeSlide }: HeroWebGLBackground
       }
     `;
 
-    // Fragment Shader: Custom displacement map, kinetic wave generator, portal vortex transition, and RGB Split Chromatic Aberration
+    // Fragment Shader: Custom displacement map, kinetic ambient fluid, directional wipe transition, and RGB Split Chromatic Aberration
     const fsSource = `
       precision highp float;
       varying vec2 vUv;
@@ -93,14 +108,11 @@ export default function HeroWebGLBackground({ activeSlide }: HeroWebGLBackground
       uniform vec2 u_mouse;
       uniform vec2 u_velocity;
       uniform float u_intensity;
-      uniform float u_slide; // Interpolated slide float val (0.0 to 4.0)
-      uniform float u_wave;  // Transition shockwave magnitude (0.0 to 1.0)
+      uniform float u_wipeProgress; // 0.0 (still on old texture) to 1.0 (fully on new texture)
+      uniform float u_direction;    // +1.0 sweeps left-to-right, -1.0 sweeps right-to-left
 
-      uniform sampler2D u_tex0;
-      uniform sampler2D u_tex1;
-      uniform sampler2D u_tex2;
-      uniform sampler2D u_tex3;
-      uniform sampler2D u_tex4;
+      uniform sampler2D u_texOld;
+      uniform sampler2D u_texNew;
 
       // Pseudo-random generation for noise
       float hash(vec2 p) {
@@ -144,80 +156,32 @@ export default function HeroWebGLBackground({ activeSlide }: HeroWebGLBackground
         return newUV;
       }
 
-      vec4 getTextureColor(vec2 uv, float slide) {
-        vec4 c0 = texture2D(u_tex0, uv);
-        vec4 c1 = texture2D(u_tex1, uv);
-        vec4 c2 = texture2D(u_tex2, uv);
-        vec4 c3 = texture2D(u_tex3, uv);
-        vec4 c4 = texture2D(u_tex4, uv);
-
-        if (slide < 1.0) {
-          return mix(c0, c1, slide);
-        } else if (slide < 2.0) {
-          return mix(c1, c2, slide - 1.0);
-        } else if (slide < 3.0) {
-          return mix(c2, c3, slide - 2.0);
-        } else {
-          return mix(c3, c4, clamp(slide - 3.0, 0.0, 1.0));
-        }
-      }
-
       void main() {
         vec2 uv = gl_FragCoord.xy / u_resolution.xy;
         vec2 aspect = vec2(u_resolution.x / u_resolution.y, 1.0);
-        
+
         // Dynamic cursor distance for target distortion
         vec2 mPos = u_mouse / u_resolution;
         vec2 distVec = (uv - mPos) * aspect;
         float dist = length(distVec);
 
-        // Center point for the portal vortex
-        vec2 center = vec2(0.5, 0.5);
-        vec2 dirToCenter = uv - center;
-        float distToCenter = length(dirToCenter * aspect);
-
-        // Transition sine bump: peaks at 1.0 exactly at 50% transition progress
-        float transitionFactor = sin(u_wave * 3.14159265);
-
-        // 1. Portal Swirl/Vortex Distortion
-        float angle = atan(dirToCenter.y, dirToCenter.x);
-        
-        // Intensity of vortex swirl based on distance to center and transition factor
-        float swirl = transitionFactor * 5.0 * (1.0 / (distToCenter + 0.12));
-        float newAngle = angle + swirl;
-
-        // 2. Portal Zoom/Implosion Transition
-        // Sucks coordinates in at center, and stretches them out when transition peaks
-        float zoom = 1.0 - transitionFactor * 0.45 * (1.0 - smoothstep(0.0, 0.95, distToCenter));
-        
-        vec2 warpedDir = vec2(cos(newAngle), sin(newAngle)) * distToCenter * zoom;
-        vec2 portalUV = center + warpedDir / aspect;
-
         // Kinetic ripples calculation
         float ripple = sin(dist * 22.0 - u_time * 3.5) * exp(-dist * 3.8);
-        
+
         // Displacement factor driven by mouse velocity and dynamic time
         vec2 displacement = vec2(0.0);
-        displacement.x = fbm(portalUV * 4.2 + vec2(u_time * 0.12, u_time * 0.08));
-        displacement.y = fbm(portalUV * 3.8 + vec2(-u_time * 0.08, u_time * 0.15));
-        
+        displacement.x = fbm(uv * 4.2 + vec2(u_time * 0.12, u_time * 0.08));
+        displacement.y = fbm(uv * 3.8 + vec2(-u_time * 0.08, u_time * 0.15));
+
         // Scale displacement by distance to cursor + current movement kinetic momentum
         float localInfluence = smoothstep(0.45, 0.0, dist);
-        vec2 kineticForce = u_velocity * 1.8 * localInfluence;
+        vec2 kineticForce = u_velocity * 0.7 * localInfluence;
 
-        // 3. Circular Portal Boundary Ring (replaces original shockwave displacement)
-        float ringRadius = transitionFactor * 0.75;
-        float ringWidth = 0.09;
-        float portalRing = smoothstep(ringRadius - ringWidth, ringRadius, distToCenter) *
-                           smoothstep(ringRadius + ringWidth, ringRadius, distToCenter);
-                           
-        vec2 shockDisplacement = normalize(dirToCenter) * portalRing * 0.12 * (1.0 - u_wave);
-        
-        // Refraction vector combining portal warp, flow noise, cursor ripples, kinetic forces, and portal shock displacement
-        vec2 refUV = portalUV + (displacement - 0.5) * 0.045 + (distVec * ripple * 0.03) + kineticForce + shockDisplacement;
+        // Refraction vector combining ambient flow noise, cursor ripples and kinetic forces
+        vec2 refUV = uv + (displacement - 0.5) * 0.03 + (distVec * ripple * 0.02) + kineticForce;
 
-        // RGB Split (Chromatic Aberration) intensity proportional to instant kinetic momentum and portal shock
-        float splitBase = 0.006 + length(u_velocity) * 0.065 + portalRing * 0.045;
+        // RGB Split (Chromatic Aberration) intensity proportional to instant kinetic momentum
+        float splitBase = 0.004 + length(u_velocity) * 0.03;
         vec2 splitVec = vec2(splitBase, splitBase * 0.5) * (1.0 + ripple);
 
         // Fetch RGB channels separately with dynamic shifts (dispersion)
@@ -236,24 +200,29 @@ export default function HeroWebGLBackground({ activeSlide }: HeroWebGLBackground
         mixedColor = mix(mixedColor, colorTeal, g * 0.85);
         mixedColor = mix(mixedColor, colorGold, b * 0.22);
 
-        // Fetch texture color with warped and aspect-ratio corrected UVs
+        // Fetch texture color with ambient-warped and aspect-ratio corrected UVs
         vec2 coverUV = getCoverUV(refUV, u_resolution, vec2(16.0, 9.0));
-        vec4 texColor = getTextureColor(coverUV, u_slide);
+        vec4 texOld = texture2D(u_texOld, coverUV);
+        vec4 texNew = texture2D(u_texNew, coverUV);
+
+        // Directional wipe: a soft curtain sweeps across the screen revealing the new
+        // category's photo. dirUV runs in the sweep direction (left->right or right->left).
+        float dirUV = u_direction > 0.0 ? uv.x : (1.0 - uv.x);
+        float edgeWidth = 0.05;
+        float sweep = mix(-edgeWidth, 1.0 + edgeWidth, u_wipeProgress);
+        float wipeMask = 1.0 - smoothstep(sweep - edgeWidth, sweep + edgeWidth, dirUV);
+        vec4 texColor = mix(texOld, texNew, wipeMask);
 
         // Create atmospheric background blending
-        // Maintain extreme premium high contrast by multiplying with dark overlay,
-        // and inject some dynamic shader fluid colors to make it feel fully alive.
-        vec3 darkTexColor = texColor.rgb * vec3(0.18, 0.22, 0.35);
-        darkTexColor += mixedColor * 0.45;
+        // Let the real photo colors read clearly, with just a light dynamic fluid tint to feel alive.
+        vec3 darkTexColor = texColor.rgb * vec3(0.8, 0.82, 0.92);
+        darkTexColor += mixedColor * 0.1;
 
-        // Slide 0.0 starts with subtle nebula, slides > 0.0 fully transition to high-detail category visual
-        float textureBlend = mix(0.15, 1.0, smoothstep(0.0, 1.0, u_slide));
-        vec3 baseBackground = mix(mixedColor, darkTexColor, textureBlend);
+        vec3 baseBackground = darkTexColor;
 
-        // 4. Portal Ring Neon Glow Overlay
-        // Glowing blend of gold/orange and bright cyan/blue during portal transit
-        vec3 ringGlowColor = mix(vec3(0.0, 148.0 / 255.0, 255.0 / 255.0), vec3(245.0 / 255.0, 158.0 / 255.0, 11.0 / 255.0), transitionFactor);
-        baseBackground += ringGlowColor * portalRing * 1.8;
+        // Soft glowing seam that travels along the wipe boundary
+        float seam = exp(-abs(dirUV - sweep) * 60.0);
+        baseBackground += vec3(1.0) * seam * 0.4;
 
         // Highlight center cursor zone with elegant radial light
         float flare = exp(-dist * 5.0) * (0.12 + length(u_velocity) * 0.5);
@@ -320,8 +289,10 @@ export default function HeroWebGLBackground({ activeSlide }: HeroWebGLBackground
     const uResolutionLoc = gl.getUniformLocation(program, "u_resolution");
     const uMouseLoc = gl.getUniformLocation(program, "u_mouse");
     const uVelocityLoc = gl.getUniformLocation(program, "u_velocity");
-    const uSlideLoc = gl.getUniformLocation(program, "u_slide");
-    const uWaveLoc = gl.getUniformLocation(program, "u_wave");
+    const uWipeProgressLoc = gl.getUniformLocation(program, "u_wipeProgress");
+    const uDirectionLoc = gl.getUniformLocation(program, "u_direction");
+    const uTexOldLoc = gl.getUniformLocation(program, "u_texOld");
+    const uTexNewLoc = gl.getUniformLocation(program, "u_texNew");
 
     // Dynamic physics state for kinetic momentum
     interface PointerState {
@@ -333,7 +304,9 @@ export default function HeroWebGLBackground({ activeSlide }: HeroWebGLBackground
       vy: number;
       prevX: number;
       prevY: number;
-      currentSlide: number;
+      fromSlide: number;
+      toSlide: number;
+      direction: number;
       waveProgress: number;
       prevActiveSlide: number;
     }
@@ -347,7 +320,9 @@ export default function HeroWebGLBackground({ activeSlide }: HeroWebGLBackground
       vy: 0,
       prevX: 0,
       prevY: 0,
-      currentSlide: activeSlideRef.current,
+      fromSlide: activeSlideRef.current,
+      toSlide: activeSlideRef.current,
+      direction: 1,
       waveProgress: 1.0, // Completed / silent initially
       prevActiveSlide: activeSlideRef.current
     };
@@ -395,7 +370,10 @@ export default function HeroWebGLBackground({ activeSlide }: HeroWebGLBackground
 
     let lastTime = 0;
     const renderLoop = (now: number) => {
-      const delta = (now - lastTime) * 0.001;
+      // Guard the very first frame: lastTime starts at 0, so without this the first delta would
+      // be "now - 0" (whatever the page's elapsed time is, often 500-1000+ ms) instead of a real
+      // ~16ms frame step, which could snap an in-progress wipe to completion instantly.
+      const delta = lastTime === 0 ? 0 : (now - lastTime) * 0.001;
       lastTime = now;
 
       // Inertia update logic for silky smooth kinetic tracking
@@ -414,60 +392,51 @@ export default function HeroWebGLBackground({ activeSlide }: HeroWebGLBackground
       state.prevX = state.currentX;
       state.prevY = state.currentY;
 
-      // Smooth Slide transition value tracking
+      // Detect slide switch to trigger the directional wipe transition
       const targetSlide = activeSlideRef.current;
-      state.currentSlide += (targetSlide - state.currentSlide) * 0.065;
-
-      // Detect slide switch to trigger shockwave
       if (state.prevActiveSlide !== targetSlide) {
-        state.waveProgress = 0.0; // Trigger wave from start
-        // Boost kinetic velocity heavily to simulate shock momentum dispersion
-        state.vx += (targetSlide > state.prevActiveSlide ? 4.5 : -4.5);
-        state.vy += 3.0;
+        state.fromSlide = state.prevActiveSlide;
+        state.toSlide = targetSlide;
+        state.direction = targetSlide > state.prevActiveSlide ? 1 : -1;
+        state.waveProgress = 0.0; // Trigger wipe from start
+        // Small kinetic nudge in the wipe direction, for a subtle sense of motion
+        state.vx += state.direction * 2.5;
         state.prevActiveSlide = targetSlide;
       }
 
-      // Propagate transition shockwave
+      // Propagate the wipe progress (eased with a smoothstep curve for a natural sweep)
       if (state.waveProgress < 1.0) {
-        state.waveProgress += delta * 0.85; // Speed adjustment for sliding
+        state.waveProgress += delta * 0.85;
         if (state.waveProgress > 1.0) {
           state.waveProgress = 1.0;
         }
       }
+      const easedWipeProgress = state.waveProgress * state.waveProgress * (3.0 - 2.0 * state.waveProgress);
 
       // Log resolution + setup viewport size
       gl.uniform2f(uResolutionLoc, canvas.width, canvas.height);
       gl.uniform1f(uTimeLoc, now * 0.001);
-      
+
       // Adjust coords scale mapping to gl_FragCoord system
       const dpr = window.devicePixelRatio || 1;
       gl.uniform2f(uMouseLoc, state.currentX * dpr, (canvas.height - state.currentY * dpr));
       gl.uniform2f(uVelocityLoc, state.vx * 0.015, -state.vy * 0.015);
-      
-      // Send slider specifics
-      gl.uniform1f(uSlideLoc, state.currentSlide);
-      gl.uniform1f(uWaveLoc, state.waveProgress);
 
-      // Bind textures to respective texture units and supply uniforms
+      // Send wipe transition specifics
+      gl.uniform1f(uWipeProgressLoc, easedWipeProgress);
+      gl.uniform1f(uDirectionLoc, state.direction);
+
+      // Bind only the two textures actually needed this frame (old/new) to fixed units.
+      // Deciding which photo backs each unit happens here in JS rather than via GLSL
+      // branching on a slide-index uniform, to sidestep GPU/driver-specific conditional
+      // sampler-selection bugs.
       gl.activeTexture(gl.TEXTURE0);
-      gl.bindTexture(gl.TEXTURE_2D, tex0);
-      gl.uniform1i(gl.getUniformLocation(program, "u_tex0"), 0);
+      gl.bindTexture(gl.TEXTURE_2D, textures[state.fromSlide]);
+      gl.uniform1i(uTexOldLoc, 0);
 
       gl.activeTexture(gl.TEXTURE1);
-      gl.bindTexture(gl.TEXTURE_2D, tex1);
-      gl.uniform1i(gl.getUniformLocation(program, "u_tex1"), 1);
-
-      gl.activeTexture(gl.TEXTURE2);
-      gl.bindTexture(gl.TEXTURE_2D, tex2);
-      gl.uniform1i(gl.getUniformLocation(program, "u_tex2"), 2);
-
-      gl.activeTexture(gl.TEXTURE3);
-      gl.bindTexture(gl.TEXTURE_2D, tex3);
-      gl.uniform1i(gl.getUniformLocation(program, "u_tex3"), 3);
-
-      gl.activeTexture(gl.TEXTURE4);
-      gl.bindTexture(gl.TEXTURE_2D, tex4);
-      gl.uniform1i(gl.getUniformLocation(program, "u_tex4"), 4);
+      gl.bindTexture(gl.TEXTURE_2D, textures[state.toSlide]);
+      gl.uniform1i(uTexNewLoc, 1);
 
       // Render fullscreen layout quad
       gl.drawArrays(gl.TRIANGLES, 0, 6);
@@ -479,6 +448,7 @@ export default function HeroWebGLBackground({ activeSlide }: HeroWebGLBackground
 
     // Clean up connections on unmount
     return () => {
+      isCancelled = true;
       cancelAnimationFrame(animationFrameId);
       window.removeEventListener("resize", resizeCanvas);
       window.removeEventListener("mousemove", handleMouseMove);

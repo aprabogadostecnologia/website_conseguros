@@ -1,6 +1,7 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
+import type { CSSProperties } from "react";
 import { motion } from "motion/react";
-import { Car, Building2, HeartPulse, ShieldCheck, ArrowRight } from "lucide-react";
+import { Car, Building2, HeartPulse, ShieldCheck, ArrowRight, TrendingUp, Zap, MessageCircle } from "lucide-react";
 
 interface HeroSlideWelcomeProps {
   onSelectSlide: (index: number) => void;
@@ -24,6 +25,34 @@ export default function HeroSlideWelcome({ onSelectSlide, onScrollToContact }: H
   // We determine if we are scrolled past 40px to trigger the expansion
   const isExpanded = scrollY > 40;
 
+  // Floating particle field for the blue bar background: each particle gets its own
+  // randomized CSS custom properties, generated once and reused across re-renders.
+  const particles = useMemo(() => {
+    return Array.from({ length: 28 }).map((_, i) => {
+      const isAccent = Math.random() < 0.18;
+      const size = Math.round(4 + Math.random() * 22);
+      const color = isAccent
+        ? `rgba(255, 141, 54, ${(0.25 + Math.random() * 0.35).toFixed(2)})`
+        : `rgba(255, 255, 255, ${(0.12 + Math.random() * 0.3).toFixed(2)})`;
+
+      return {
+        id: i,
+        style: {
+          "--top": `${Math.round(Math.random() * 100)}%`,
+          "--left": `${Math.round(Math.random() * 100)}%`,
+          "--size": `${size}px`,
+          "--tx": `${Math.round((Math.random() - 0.5) * 90)}px`,
+          "--ty": `${Math.round((Math.random() - 0.5) * 70)}px`,
+          "--tz": `${Math.round((Math.random() - 0.5) * 160)}px`,
+          "--rot": `${Math.round(Math.random() * 180 - 90)}deg`,
+          "--duration": `${(8 + Math.random() * 10).toFixed(1)}s`,
+          "--delay": `${(-(Math.random() * 14)).toFixed(1)}s`,
+          "--particle-color": color,
+        } as CSSProperties,
+      };
+    });
+  }, []);
+
   const categories = [
     {
       id: 1,
@@ -31,7 +60,7 @@ export default function HeroSlideWelcome({ onSelectSlide, onScrollToContact }: H
       tagline: "PÓLIZAS DE RIESGO",
       desc: "Protección integral para vehículos particulares y flotas corporativas contra todo riesgo.",
       icon: Car,
-      image: "https://images.unsplash.com/photo-1549399542-7e3f8b79c341?auto=format&fit=crop&q=80&w=600",
+      image: "https://images.unsplash.com/photo-1601362840469-51e4d8d58785?auto=format&fit=crop&q=80&w=600",
       badgeText: "Movilidad",
       accentGlow: "from-blue-500/10 to-transparent",
       bgColor: "bg-[#2480e6]",
@@ -79,70 +108,139 @@ export default function HeroSlideWelcome({ onSelectSlide, onScrollToContact }: H
     >
       {/* 1. STICKY BACKGROUND LAYER (Fondo Principal con la marca)
           Responsive viewport height calculation ensuring the blue bar sits beautifully at the bottom of the screen with no clipping! */}
-      <div className="sticky top-[64px] md:top-[80px] left-0 w-full h-[calc(100vh-64px-114px)] md:h-[calc(100vh-80px-157px)] overflow-hidden flex flex-col justify-center items-center z-10 bg-white">
+      <div className="sticky top-[64px] md:top-[80px] left-0 w-full h-[max(360px,min(calc(100vh-64px-134px),720px))] md:h-[max(480px,min(calc(100vh-80px-185px),820px))] overflow-hidden flex flex-col justify-center items-center z-10 bg-white">
         {/* Subtle light background radial gradient */}
         <div className="absolute inset-0 bg-radial from-slate-50/50 via-white to-white pointer-events-none" />
         
         {/* Central Layout containing Brand elements */}
-        <div className="relative flex flex-col items-center justify-center text-center max-w-4xl px-6">
+        <div className="relative flex flex-col items-center justify-center text-center max-w-4xl xl:max-w-5xl px-6">
           {/* Central Logo Silhouette Icon */}
           <div className="relative mb-4 flex items-center justify-center">
-            <div className="absolute inset-0 bg-[#121ccf]/5 rounded-full filter blur-2xl w-44 h-44 md:w-72 md:h-72 pointer-events-none animate-pulse" />
-            <img 
-              src="/images/log%20sin%20fondo.png" 
-              alt="Conseguros Logo" 
-              className="w-36 h-36 md:w-56 md:h-56 lg:w-64 lg:h-64 object-contain relative z-10 select-none drop-shadow-[0_12px_24px_rgba(18,28,207,0.08)]" 
-              referrerPolicy="no-referrer" 
+            <div className="absolute inset-0 bg-[#121ccf]/5 rounded-full filter blur-2xl w-64 h-64 md:w-96 md:h-96 xl:w-[28rem] xl:h-[28rem] pointer-events-none animate-pulse" />
+            <img
+              src="/images/log%20sin%20fondo.png"
+              alt="Conseguros Logo"
+              className="w-52 h-52 md:w-80 md:h-80 lg:w-88 lg:h-88 xl:w-[22rem] xl:h-[22rem] object-contain relative z-10 select-none drop-shadow-[0_12px_24px_rgba(18,28,207,0.08)]"
+              referrerPolicy="no-referrer"
             />
           </div>
 
-          {/* Under Logo Brand Name */}
-          <h2 className="text-[#050839] font-black text-lg md:text-2.5xl tracking-[0.3em] uppercase font-sans mt-0.5">
-            CONSEGUROS
-          </h2>
-
           {/* Core Headline */}
-          <h1 className="font-display font-bold text-slate-700 mt-2 text-sm md:text-lg max-w-xl leading-relaxed tracking-wide">
+          <h1 className="font-display font-bold text-slate-700 mt-4 text-sm md:text-lg xl:text-xl max-w-xl xl:max-w-2xl leading-relaxed tracking-wide">
             Seguros hechos simples, claros y cercanos
           </h1>
         </div>
 
-        {/* THREE SLANTED STATS/METRIC CARDS FLOATING IN SPACE */}
-        {/* Card 1: Left-Top */}
-        <motion.div
-          animate={{ y: [0, -6, 0], rotate: [-6, -7, -6] }}
-          transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
-          style={{ transformOrigin: "center" }}
-          className="hidden md:flex absolute top-[14%] left-[6%] lg:left-[12%] z-25 flex-col items-center justify-center select-none cursor-default text-center"
-        >
-          <span className="text-4xl lg:text-5.5xl font-black text-[#121ccf] leading-none">+35</span>
-          <span className="text-[8px] lg:text-[9.5px] font-extrabold tracking-[0.2em] text-slate-450 uppercase mt-2.5 leading-none">Años de</span>
-          <span className="text-[8px] lg:text-[9.5px] font-extrabold tracking-[0.2em] text-slate-450 uppercase leading-none mt-1">Experiencia</span>
-        </motion.div>
+        {/* STATS/METRIC CARDS: ALIGNED FLOATING COLUMN ON THE LEFT SIDE */}
+        <div className="hidden md:flex absolute left-[5%] lg:left-[10%] xl:left-[12%] top-1/2 -translate-y-1/2 z-25 flex-col items-center gap-10 lg:gap-14">
+          <motion.div
+            animate={{ y: [0, -6, 0] }}
+            transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
+            className="flex flex-col items-center justify-center select-none cursor-default text-center"
+          >
+            <span className="text-5xl lg:text-6xl xl:text-7xl font-black text-[#121ccf] leading-none">+35</span>
+            <span className="text-[9px] lg:text-[11px] xl:text-xs font-extrabold tracking-[0.2em] text-slate-500 uppercase mt-2.5 leading-none">Años de</span>
+            <span className="text-[9px] lg:text-[11px] xl:text-xs font-extrabold tracking-[0.2em] text-slate-500 uppercase leading-none mt-1">Experiencia</span>
+          </motion.div>
 
-        {/* Card 2: Right-Top */}
-        <motion.div
-          animate={{ y: [0, -8, 0], rotate: [8, 7, 8] }}
-          transition={{ duration: 6, repeat: Infinity, ease: "easeInOut", delay: 0.5 }}
-          style={{ transformOrigin: "center" }}
-          className="hidden md:flex absolute top-[20%] right-[6%] lg:right-[12%] z-25 flex-col items-center justify-center select-none cursor-default text-center"
-        >
-          <span className="text-4xl lg:text-5.5xl font-black text-[#050839] leading-none">57</span>
-          <span className="text-[8px] lg:text-[9.5px] font-extrabold tracking-[0.2em] text-slate-450 uppercase mt-2.5 leading-none">Clientes</span>
-          <span className="text-[8px] lg:text-[9.5px] font-extrabold tracking-[0.2em] text-slate-450 uppercase leading-none mt-1">Felices</span>
-        </motion.div>
+          <motion.div
+            animate={{ y: [0, -8, 0] }}
+            transition={{ duration: 6, repeat: Infinity, ease: "easeInOut", delay: 0.5 }}
+            className="flex flex-col items-center justify-center select-none cursor-default text-center"
+          >
+            <span className="text-4xl lg:text-5xl xl:text-6xl font-black text-[#050839] leading-none">+5.000</span>
+            <span className="text-[9px] lg:text-[11px] xl:text-xs font-extrabold tracking-[0.2em] text-slate-500 uppercase mt-2.5 leading-none">Vidas</span>
+            <span className="text-[9px] lg:text-[11px] xl:text-xs font-extrabold tracking-[0.2em] text-slate-500 uppercase leading-none mt-1">Protegidas</span>
+          </motion.div>
 
-        {/* Card 3: Left-Bottom */}
-        <motion.div
-          animate={{ y: [0, -5, 0], rotate: [-4, -3, -4] }}
-          transition={{ duration: 5.5, repeat: Infinity, ease: "easeInOut", delay: 1 }}
-          style={{ transformOrigin: "center" }}
-          className="hidden md:flex absolute bottom-[16%] left-[5%] lg:left-[10%] z-25 flex-col items-center justify-center select-none cursor-default text-center"
-        >
-          <span className="text-4xl lg:text-5.5xl font-black text-[#FF8D36] leading-none">+84</span>
-          <span className="text-[8px] lg:text-[9.5px] font-extrabold tracking-[0.2em] text-slate-450 uppercase mt-2.5 leading-none">Procesos</span>
-          <span className="text-[8px] lg:text-[9.5px] font-extrabold tracking-[0.2em] text-slate-450 uppercase leading-none mt-1">Exitosos</span>
-        </motion.div>
+          <motion.div
+            animate={{ y: [0, -5, 0] }}
+            transition={{ duration: 5.5, repeat: Infinity, ease: "easeInOut", delay: 1 }}
+            className="flex flex-col items-center justify-center select-none cursor-default text-center"
+          >
+            <span className="text-5xl lg:text-6xl xl:text-7xl font-black text-[#FF8D36] leading-none">+84</span>
+            <span className="text-[9px] lg:text-[11px] xl:text-xs font-extrabold tracking-[0.2em] text-slate-500 uppercase mt-2.5 leading-none">Procesos</span>
+            <span className="text-[9px] lg:text-[11px] xl:text-xs font-extrabold tracking-[0.2em] text-slate-500 uppercase leading-none mt-1">Exitosos</span>
+          </motion.div>
+        </div>
+
+        {/* QUICK-QUOTE CTA: FLOATING COLUMN ON THE RIGHT SIDE */}
+        <div className="hidden md:flex absolute right-[5%] lg:right-[10%] xl:right-[12%] top-1/2 -translate-y-1/2 z-25 flex-col items-stretch gap-4 w-60 lg:w-72 xl:w-80">
+          {/* Social-proof stats, stacked above the CTA buttons */}
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.35, duration: 0.6, ease: "easeOut" }}
+            className="flex flex-col gap-3 mb-1"
+          >
+            <motion.div
+              animate={{ y: [0, -5, 0] }}
+              transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
+              className="flex items-center gap-3.5 bg-white/80 backdrop-blur-sm border border-slate-100 rounded-2xl px-5 py-4 xl:py-5 shadow-sm"
+            >
+              <div className="w-12 h-12 xl:w-14 xl:h-14 rounded-xl bg-[#121ccf]/8 text-[#121ccf] flex items-center justify-center shrink-0">
+                <HeartPulse className="w-6 h-6 xl:w-7 xl:h-7" />
+              </div>
+              <div className="text-left">
+                <span className="block text-1xl xl:text-2xl font-black text-[#050839] leading-none">+10.000 millones</span>
+                <span className="block text-[10px] xl:text-xs font-extrabold tracking-[0.12em] text-slate-500 uppercase mt-1.5 leading-tight">
+                  Protegidos
+                </span>
+              </div>
+            </motion.div>
+
+            <motion.div
+              animate={{ y: [0, -6, 0] }}
+              transition={{ duration: 5.5, repeat: Infinity, ease: "easeInOut", delay: 0.4 }}
+              className="flex items-center gap-3.5 bg-white/80 backdrop-blur-sm border border-slate-100 rounded-2xl px-5 py-4 xl:py-5 shadow-sm"
+            >
+              <div className="w-12 h-12 xl:w-14 xl:h-14 rounded-xl bg-[#FF8D36]/10 text-[#FF8D36] flex items-center justify-center shrink-0">
+                <TrendingUp className="w-6 h-6 xl:w-7 xl:h-7" />
+              </div>
+              <div className="text-left">
+                <span className="block text-2xl xl:text-3xl font-black text-[#050839] leading-none">$80.000.000</span>
+                <span className="block text-[10px] xl:text-xs font-extrabold tracking-[0.12em] text-slate-500 uppercase mt-1.5 leading-tight">
+                  Ahorro Pyme anual
+                </span>
+              </div>
+            </motion.div>
+          </motion.div>
+
+          <motion.div
+            animate={{ y: [0, -7, 0] }}
+            transition={{ duration: 5.5, repeat: Infinity, ease: "easeInOut" }}
+          >
+            <button
+              onClick={() => document.getElementById("cotizar")?.scrollIntoView({ behavior: "smooth" })}
+              className="w-full group bg-[#FF8D36] hover:bg-[#f07f26] text-white px-5 py-4 rounded-2xl shadow-xl shadow-orange-500/25 flex items-center gap-3 transition-all hover:scale-[1.03] active:scale-[0.98] cursor-pointer"
+            >
+              <Zap className="w-5 h-5 shrink-0" />
+              <span className="text-left leading-tight">
+                <span className="block text-[10px] font-extrabold uppercase tracking-widest opacity-90">Cotiza en</span>
+                <span className="block text-sm font-black uppercase tracking-wide">2 minutos</span>
+              </span>
+              <ArrowRight className="w-4 h-4 ml-auto shrink-0 transition-transform group-hover:translate-x-1" />
+            </button>
+          </motion.div>
+
+          <motion.div
+            animate={{ y: [0, -5, 0] }}
+            transition={{ duration: 6, repeat: Infinity, ease: "easeInOut", delay: 0.6 }}
+          >
+            <a
+              href="https://wa.me/573210000000?text=Hola%20Conseguros%2C%20quiero%20cotizar%20un%20seguro"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-full bg-white border border-emerald-200 hover:border-emerald-300 text-emerald-700 px-5 py-4 rounded-2xl shadow-lg shadow-emerald-500/10 flex items-center gap-3 transition-all hover:scale-[1.03] active:scale-[0.98]"
+            >
+              <MessageCircle className="w-5 h-5 shrink-0 text-emerald-500" />
+              <span className="text-left leading-tight">
+                <span className="block text-sm font-black">WhatsApp directo</span>
+                <span className="block text-[10px] font-bold text-emerald-500/80 uppercase tracking-wider mt-0.5">Respuesta inmediata</span>
+              </span>
+            </a>
+          </motion.div>
+        </div>
       </div>
 
       {/* 2. SLIDING BLUE BAR LAYER (Franja Azul #0812CC que sobresale y "cubre" el fondo fijo al hacer scroll) */}
@@ -150,9 +248,16 @@ export default function HeroSlideWelcome({ onSelectSlide, onScrollToContact }: H
         className={`relative z-20 w-full bg-[#0812CC] border-t border-blue-400/20 flex flex-col items-center transition-all duration-500 ${
           isExpanded 
             ? "pb-24 pt-6 md:pt-10 px-4 sm:px-6 md:px-12 lg:px-16 shadow-[0_-24px_50px_rgba(8,18,204,0.3)]" 
-            : "py-3 md:py-4 px-4 sm:px-6 md:px-12 lg:px-16"
+            : "pt-3 pb-8 md:pt-4 md:pb-11 px-4 sm:px-6 md:px-12 lg:px-16"
         }`}
       >
+        {/* Ambient floating particle field */}
+        <div className="hero-particle-field">
+          {particles.map((p) => (
+            <span key={p.id} className="hero-particle" style={p.style} />
+          ))}
+        </div>
+
         {/* Accent visual top rail bar */}
         <div className={`w-12 h-1 bg-blue-300/35 rounded-full pointer-events-none transition-all duration-500 ${
           isExpanded ? "mb-5 md:mb-7" : "mb-2 md:mb-3"
@@ -171,11 +276,11 @@ export default function HeroSlideWelcome({ onSelectSlide, onScrollToContact }: H
             transform: isExpanded ? "translateY(0)" : "translateY(15px)"
           }}
         >
-          <h2 className="font-display font-extrabold text-white text-3.5xl md:text-5xl lg:text-5.5xl tracking-tight mb-2">
-            Conseguros Colombia
+          <h2 className="font-display font-extrabold text-white text-3xl md:text-5xl lg:text-6xl xl:text-7xl tracking-tight mb-2">
+            Compara. Elige. Asegúrate.
           </h2>
           <p className="font-sans font-medium text-blue-100/90 text-sm md:text-lg">
-            Seguros hechos simples, claros y cercanos
+              Comparamos por ti entre 13+ aseguradoras de Colombia y te acompañamos en cada paso, desde la cotización hasta el siniestro. Así de simple debería ser un seguro.
           </p>
         </div>
 

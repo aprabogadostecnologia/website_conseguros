@@ -1,4 +1,5 @@
-import { useState, FormEvent } from "react";
+import { useState, FormEvent, ReactNode } from "react";
+import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "motion/react";
 import { 
   Car, 
@@ -10,17 +11,17 @@ import {
   Sparkles, 
   ArrowRight, 
   ArrowLeft,
-  Check, 
-  MapPin, 
-  Users, 
-  Info, 
+  Check,
+  MapPin,
+  Users,
   Calendar,
   FileText,
   Phone,
   HelpCircle,
-  TrendingUp,
   Activity,
-  Award
+  Award,
+  Building2,
+  ShieldCheck
 } from "lucide-react";
 import { ConsultationRequest } from "../types";
 
@@ -28,7 +29,7 @@ interface EstimatorCalculatorProps {
   onSaveConsultation: (req: ConsultationRequest) => void;
 }
 
-type QuoteType = "autos" | "motos" | "salud";
+type QuoteType = "vehiculos" | "salud" | "empresarial" | "arl";
 
 export default function EstimatorCalculator({ onSaveConsultation }: EstimatorCalculatorProps) {
   const [activeQuoteType, setActiveQuoteType] = useState<QuoteType | null>(null);
@@ -43,6 +44,9 @@ export default function EstimatorCalculator({ onSaveConsultation }: EstimatorCal
   const [clientPhone, setClientPhone] = useState<string>("");
   const [clientEmail, setClientEmail] = useState<string>("");
   const [termsAccepted, setTermsAccepted] = useState<boolean>(true);
+
+  // Selector Carro / Moto dentro del modal de vehículos
+  const [vehicleKind, setVehicleKind] = useState<"carro" | "moto">("carro");
 
   // Estados específicos para simulación Autos
   const [autoValue, setAutoValue] = useState<number>(65); // Millions COP
@@ -66,6 +70,81 @@ export default function EstimatorCalculator({ onSaveConsultation }: EstimatorCal
   const [saludAge, setSaludAge] = useState<string>("31-50");
   const [saludSaved, setSaludSaved] = useState<boolean>(false);
 
+  // Estados específicos para simulación Empresarial
+  const [empresaSector, setEmpresaSector] = useState<string>("comercio");
+  const [empresaAssets, setEmpresaAssets] = useState<number>(300); // Millions COP
+  const [empresaEmployees, setEmpresaEmployees] = useState<number>(15);
+  const [empresarialSaved, setEmpresarialSaved] = useState<boolean>(false);
+
+  // Estados específicos para simulación ARL (aportes de ley)
+  const [arlRiskClass, setArlRiskClass] = useState<number>(2);
+  const [arlEmployees, setArlEmployees] = useState<number>(20);
+  const [arlSalary, setArlSalary] = useState<number>(1600000);
+  const [arlSaved, setArlSaved] = useState<boolean>(false);
+
+  // Tasas ARL de ley en Colombia por clase de riesgo (I a V)
+  const arlRates = [0.522, 1.044, 2.436, 4.35, 8.7];
+
+  const empresaSectorLabels: Record<string, string> = {
+    comercio: "Comercio / Oficinas",
+    fabrica: "Fábrica / Industria",
+    servicios: "Servicios Profesionales",
+    construccion: "Construcción / Obra Civil",
+  };
+
+  // Mazo 3D de selección: cerrado = apilado con profundidad, abierto = lista desplegada
+  const [deckOpen, setDeckOpen] = useState<boolean>(false);
+
+  // Transformaciones de cada fila en estado cerrado (efecto baraja con foco fotográfico):
+  // el orden visual del mazo queda invertido al del arreglo (la última tarjeta del
+  // arreglo -ARL- termina al frente), así que la nitidez crece del índice 0 al 3.
+  const deckClosedFx = [
+    { transform: "translateZ(-75px) translateY(20px)", opacity: 0.6, filter: "blur(5px)" },
+    { transform: "translateZ(0) translateY(0)", opacity: 0.85, filter: "blur(3px)" },
+    { transform: "translateZ(65px) translateY(-30px)", opacity: 1, filter: "blur(1.5px)" },
+    { transform: "translateZ(125px) translateY(-68px)", opacity: 1, filter: "blur(0)" },
+  ];
+
+  const quoteCards: Array<{ type: QuoteType; title: string; desc: string; iconBg: string; accentText: string; icon: ReactNode }> = [
+    {
+      type: "vehiculos",
+      title: "Auto y Moto",
+      desc: "Todo riesgo para carro o moto con grúa y asistencia 24/7.",
+      iconBg: "bg-blue-50 text-brand-blue",
+      accentText: "text-brand-blue",
+      icon: (
+        <>
+          <Car className="w-6 h-6" />
+          <Bike className="w-4 h-4 -ml-1" />
+        </>
+      ),
+    },
+    {
+      type: "salud",
+      title: "Planes de Salud",
+      desc: "Prepagada y pólizas con la mejor red médica del país.",
+      iconBg: "bg-amber-50 text-amber-600",
+      accentText: "text-amber-600",
+      icon: <HeartPulse className="w-6 h-6" />,
+    },
+    {
+      type: "empresarial",
+      title: "Seguro Empresarial",
+      desc: "Multirriesgo, RCE y lucro cesante para tu Pyme.",
+      iconBg: "bg-violet-50 text-violet-600",
+      accentText: "text-violet-600",
+      icon: <Building2 className="w-6 h-6" />,
+    },
+    {
+      type: "arl",
+      title: "ARL Empresarial",
+      desc: "Optimiza tus aportes de ley con intermediación $0.",
+      iconBg: "bg-indigo-50 text-indigo-600",
+      accentText: "text-indigo-600",
+      icon: <ShieldCheck className="w-6 h-6" />,
+    },
+  ];
+
   const resetLeadForm = () => {
     setClientName("");
     setClientDocumentNumber("");
@@ -75,6 +154,7 @@ export default function EstimatorCalculator({ onSaveConsultation }: EstimatorCal
     setMotoPlate("");
     setAutoNoPlate(false);
     setMotoNoPlate(false);
+    setVehicleKind("carro");
     setCurrentStep(1);
   };
 
@@ -137,6 +217,26 @@ export default function EstimatorCalculator({ onSaveConsultation }: EstimatorCal
     else ageFactor = 2.05;
 
     return Math.round(baseVal * saludInsured * ageFactor);
+  };
+
+  // Calculations for Empresarial
+  const calculateEmpresarialPremium = () => {
+    const sectorFactors: Record<string, number> = {
+      comercio: 1.0,
+      servicios: 0.88,
+      fabrica: 1.35,
+      construccion: 1.55,
+    };
+    const annualRate = 0.0036; // 0.36% of insured assets per year
+    const baseMonthly = (empresaAssets * 1000000 * annualRate) / 12;
+    const rcePerEmployee = 3500; // RCE component per employee
+    return Math.round(baseMonthly * (sectorFactors[empresaSector] ?? 1) + empresaEmployees * rcePerEmployee);
+  };
+
+  // Calculations for ARL (aporte obligatorio mensual de ley)
+  const calculateArlContribution = () => {
+    const rate = arlRates[arlRiskClass - 1] / 100;
+    return Math.round(arlSalary * rate * arlEmployees);
   };
 
   const handleSaveAutoQuote = (e: FormEvent) => {
@@ -211,160 +311,101 @@ export default function EstimatorCalculator({ onSaveConsultation }: EstimatorCal
     }, 4000);
   };
 
+  const handleSaveEmpresarialQuote = (e: FormEvent) => {
+    e.preventDefault();
+    if (!clientEmail) return;
+
+    const estimated = calculateEmpresarialPremium();
+    const newRequest: ConsultationRequest = {
+      id: "EMP-" + Math.floor(1000 + Math.random() * 9000),
+      email: clientEmail,
+      timestamp: new Date().toLocaleString("es-CO", { timeZone: "America/Bogota" }),
+      status: "pending",
+      companySize: `${empresaEmployees} empleados / Activos: ${empresaAssets}M COP`,
+      riskCategory: `Seguro Empresarial - ${empresaSectorLabels[empresaSector]}`,
+      notes: `Simulación Empresarial - Contacto: ${clientName} (${clientDocumentType}: ${clientDocumentNumber}), Celular: ${clientPhone}. Sector: ${empresaSectorLabels[empresaSector]}. Prima Estimada: ${formatCOP(estimated)}/mes.`,
+    };
+
+    onSaveConsultation(newRequest);
+    setEmpresarialSaved(true);
+    setTimeout(() => {
+      setEmpresarialSaved(false);
+      resetLeadForm();
+      setActiveQuoteType(null);
+    }, 4000);
+  };
+
+  const handleSaveArlQuote = (e: FormEvent) => {
+    e.preventDefault();
+    if (!clientEmail) return;
+
+    const contribution = calculateArlContribution();
+    const newRequest: ConsultationRequest = {
+      id: "ARL-" + Math.floor(1000 + Math.random() * 9000),
+      email: clientEmail,
+      timestamp: new Date().toLocaleString("es-CO", { timeZone: "America/Bogota" }),
+      status: "pending",
+      companySize: `${arlEmployees} empleados (Riesgo Clase ${["I", "II", "III", "IV", "V"][arlRiskClass - 1]})`,
+      riskCategory: "Intermediación ARL de Ley ($0)",
+      notes: `Simulación ARL - Contacto: ${clientName} (${clientDocumentType}: ${clientDocumentNumber}), Celular: ${clientPhone}. Tasa: ${arlRates[arlRiskClass - 1]}%. Aporte mensual estimado: ${formatCOP(contribution)}. Retorno legal en prevención (9.2%): ${formatCOP(Math.round(contribution * 0.092))}/mes.`,
+    };
+
+    onSaveConsultation(newRequest);
+    setArlSaved(true);
+    setTimeout(() => {
+      setArlSaved(false);
+      resetLeadForm();
+      setActiveQuoteType(null);
+    }, 4000);
+  };
+
   return (
     <div className="max-w-6xl mx-auto px-4" id="cotizacion-selection-container">
       
-      {/* 3 Main Choice Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-        
-        {/* Autos Card */}
-        <motion.div 
-          whileHover={{ y: -8 }}
-          className="bg-white rounded-[2.5rem] border border-gray-100 p-8 shadow-xs hover:border-blue-300 hover:shadow-xl hover:shadow-blue-50/50 transition-all duration-300 flex flex-col justify-between"
-          id="quote-card-autos"
+      {/* Mazo 3D de cards compactas: apiladas en reposo, se despliegan al hover o al tocar */}
+      <div className="flex flex-col items-center">
+        <div
+          onMouseEnter={() => setDeckOpen(true)}
+          onMouseLeave={() => setDeckOpen(false)}
+          className="flex flex-col items-center w-full"
+          style={{ perspective: "500px", transformStyle: "preserve-3d", gap: deckOpen ? "20px" : "0px", transition: "gap 500ms" }}
         >
-          <div>
-            <div className="w-16 h-16 rounded-[1.3rem] bg-blue-50 text-brand-blue flex items-center justify-center mb-6">
-              <Car className="w-8 h-8" />
-            </div>
-            <div className="flex items-center space-x-2 mb-2">
-              <span className="bg-blue-50 text-brand-blue text-xs md:text-sm font-black uppercase px-2.5 py-1 rounded-md tracking-wider">
-                Vehículos
-              </span>
-              <span className="bg-slate-100 text-slate-600 text-xs md:text-sm font-black uppercase px-2.5 py-1 rounded-md tracking-wider">
-                Todo Riesgo
-              </span>
-            </div>
-            <h3 className="text-2xl font-extrabold text-[#0F1740] mb-3">Seguro de Autos</h3>
-            <p className="text-sm text-gray-500 leading-relaxed mb-6">
-              Indemnización completa por robo total, daños colaterales de terceros y asistencia de viaje con grúa gratis en todo el territorio colombiano.
-            </p>
-            
-            <div className="border-t border-slate-100 pt-5 space-y-3 mb-8">
-              <div className="flex items-center text-xs font-semibold text-gray-600">
-                <Check className="w-4 h-4 text-brand-blue mr-2 shrink-0" />
-                Deducibles altamente flexibles
+          {quoteCards.map((card, i) => (
+            <div
+              key={card.type}
+              id={`quote-card-${card.type}`}
+              onClick={() => (deckOpen ? handleOpenQuoteType(card.type) : setDeckOpen(true))}
+              className="w-full max-w-[620px] bg-white rounded-xl border border-gray-100 p-4 shadow-[0_0_12px_rgba(0,0,0,0.16)] flex items-center gap-4 cursor-pointer hover:border-blue-200"
+              style={{
+                transition: "transform 500ms, opacity 500ms, filter 500ms, border-color 300ms",
+                transitionDelay: `${i * 50}ms`,
+                ...(deckOpen
+                  ? { transform: "translateZ(0) translateY(0)", opacity: 1, filter: "blur(0)" }
+                  : deckClosedFx[i]),
+              }}
+            >
+              <div className={`w-14 h-14 rounded-xl ${card.iconBg} flex items-center justify-center shrink-0`}>
+                {card.icon}
               </div>
-              <div className="flex items-center text-xs font-semibold text-gray-600">
-                <Check className="w-4 h-4 text-brand-blue mr-2 shrink-0" />
-                Vehículo de reemplazo por accidente
+              <div className="flex-1 text-left min-w-0">
+                <h3 className="text-base font-extrabold text-[#0F1740] leading-tight">{card.title}</h3>
+                <p className="text-xs text-gray-500 font-medium leading-snug mt-1">{card.desc}</p>
               </div>
-              <div className="flex items-center text-xs font-semibold text-gray-600">
-                <Check className="w-4 h-4 text-brand-blue mr-2 shrink-0" />
-                Descuentos por no reclamación
+              <div className={`flex items-center gap-1 text-xs font-black uppercase tracking-wider shrink-0 ${card.accentText}`}>
+                <span className="hidden sm:inline">Cotizar</span>
+                <ArrowRight className="w-4 h-4" />
               </div>
             </div>
-          </div>
+          ))}
+        </div>
 
-          <button
-            onClick={() => handleOpenQuoteType("autos")}
-            className="w-full bg-brand-blue hover:bg-blue-800 text-white font-extrabold py-4 px-6 rounded-full text-xs transition-all flex items-center justify-center space-x-1.5 shadow-md shadow-blue-100 cursor-pointer"
-          >
-            <span>Quiero cotizar Autos</span>
-            <ArrowRight className="w-4 h-4" />
-          </button>
-        </motion.div>
-
-        {/* Motos Card */}
-        <motion.div 
-          whileHover={{ y: -8 }}
-          className="bg-white rounded-[2.5rem] border border-gray-100 p-8 shadow-xs hover:border-emerald-300 hover:shadow-xl hover:shadow-emerald-50/50 transition-all duration-300 flex flex-col justify-between"
-          id="quote-card-motos"
-        >
-          <div>
-            <div className="w-16 h-16 rounded-[1.3rem] bg-emerald-50 text-emerald-600 flex items-center justify-center mb-6">
-              <Bike className="w-8 h-8" />
-            </div>
-            <div className="flex items-center space-x-2 mb-2">
-              <span className="bg-emerald-50 text-emerald-600 text-xs md:text-sm font-black uppercase px-2.5 py-1 rounded-md tracking-wider">
-                Dos Ruedas
-              </span>
-              <span className="bg-slate-100 text-slate-600 text-xs md:text-sm font-black uppercase px-2.5 py-1 rounded-md tracking-wider">
-                Protección 24/7
-              </span>
-            </div>
-            <h3 className="text-2xl font-extrabold text-[#0F1740] mb-3">Seguro de Motos</h3>
-            <p className="text-sm text-gray-500 leading-relaxed mb-6">
-              Respaldamos tu pasión y herramienta de trabajo. Amparo integral contra hurto calificado y daños accidentales a terceros en vías públicas.
-            </p>
-            
-            <div className="border-t border-slate-100 pt-5 space-y-3 mb-8">
-              <div className="flex items-center text-xs font-semibold text-gray-600">
-                <Check className="w-4 h-4 text-emerald-600 mr-2 shrink-0" />
-                Amparo de robo y pérdida total
-              </div>
-              <div className="flex items-center text-xs font-semibold text-gray-600">
-                <Check className="w-4 h-4 text-emerald-600 mr-2 shrink-0" />
-                Asistencia en carretera y grúa
-              </div>
-              <div className="flex items-center text-xs font-semibold text-gray-600">
-                <Check className="w-4 h-4 text-emerald-600 mr-2 shrink-0" />
-                Gastos médicos urgentes incluidos
-              </div>
-            </div>
-          </div>
-
-          <button
-            onClick={() => handleOpenQuoteType("motos")}
-            className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold py-4 px-6 rounded-full text-xs transition-all flex items-center justify-center space-x-1.5 shadow-md shadow-emerald-100 cursor-pointer"
-          >
-            <span>Quiero cotizar Motos</span>
-            <ArrowRight className="w-4 h-4" />
-          </button>
-        </motion.div>
-
-        {/* Salud Card */}
-        <motion.div 
-          whileHover={{ y: -8 }}
-          className="bg-white rounded-[2.5rem] border border-gray-100 p-8 shadow-xs hover:border-amber-300 hover:shadow-xl hover:shadow-amber-50/50 transition-all duration-300 flex flex-col justify-between"
-          id="quote-card-salud"
-        >
-          <div>
-            <div className="w-16 h-16 rounded-[1.3rem] bg-amber-50 text-amber-600 flex items-center justify-center mb-6">
-              <HeartPulse className="w-8 h-8" />
-            </div>
-            <div className="flex items-center space-x-2 mb-2">
-              <span className="bg-amber-50 text-amber-600 text-xs md:text-sm font-black uppercase px-2.5 py-1 rounded-md tracking-wider">
-                Bienestar
-              </span>
-              <span className="bg-slate-100 text-slate-600 text-xs md:text-sm font-black uppercase px-2.5 py-1 rounded-md tracking-wider">
-                Prepagada / Póliza
-              </span>
-            </div>
-            <h3 className="text-2xl font-extrabold text-[#0F1740] mb-3">Planes de Salud</h3>
-            <p className="text-sm text-gray-500 leading-relaxed mb-6">
-              Acceso directo e inmediato a la más selecta red de médicos de Colombia, habitación individual hospitalaria y cobertura en urgencias internacionales.
-            </p>
-            
-            <div className="border-t border-slate-100 pt-5 space-y-3 mb-8">
-              <div className="flex items-center text-xs font-semibold text-gray-600">
-                <Check className="w-4 h-4 text-amber-600 mr-2 shrink-0" />
-                Especialistas sin orden médica previa
-              </div>
-              <div className="flex items-center text-xs font-semibold text-gray-600">
-                <Check className="w-4 h-4 text-amber-600 mr-2 shrink-0" />
-                Atención preferencial clínicas elite
-              </div>
-              <div className="flex items-center text-xs font-semibold text-gray-600">
-                <Check className="w-4 h-4 text-amber-600 mr-2 shrink-0" />
-                Asistencia médica a domicilio 24/7
-              </div>
-            </div>
-          </div>
-
-          <button
-            onClick={() => handleOpenQuoteType("salud")}
-            className="w-full bg-amber-600 hover:bg-amber-700 text-white font-extrabold py-4 px-6 rounded-full text-xs transition-all flex items-center justify-center space-x-1.5 shadow-md shadow-amber-100 cursor-pointer"
-          >
-            <span>Quiero cotizar Salud</span>
-            <ArrowRight className="w-4 h-4" />
-          </button>
-        </motion.div>
-
+        <p className="text-xs text-gray-400 font-semibold mt-8 select-none">
+          {deckOpen ? "Elige la categoría que quieres cotizar" : "Pasa el cursor o toca el mazo para ver las categorías"}
+        </p>
       </div>
 
-
-      {/* High-Fidelity Emergent Modals Block */}
+      {/* High-Fidelity Emergent Modals Block (portal a body para escapar del stacking context de la sección) */}
+      {createPortal(
       <AnimatePresence>
         {activeQuoteType && (
           <div className="fixed inset-0 z-50 overflow-y-auto flex items-center justify-center p-4">
@@ -403,22 +444,25 @@ export default function EstimatorCalculator({ onSaveConsultation }: EstimatorCal
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-3">
                     <div className={`p-3 rounded-2xl ${
-                      activeQuoteType === "autos" ? "bg-blue-50 text-brand-blue" :
-                      activeQuoteType === "motos" ? "bg-emerald-50 text-emerald-600" :
-                      "bg-amber-50 text-amber-600"
+                      activeQuoteType === "vehiculos" ? "bg-blue-50 text-brand-blue" :
+                      activeQuoteType === "salud" ? "bg-amber-50 text-amber-600" :
+                      activeQuoteType === "empresarial" ? "bg-violet-50 text-violet-600" :
+                      "bg-indigo-50 text-indigo-600"
                     }`}>
-                      {activeQuoteType === "autos" && <Car className="w-6 h-6" />}
-                      {activeQuoteType === "motos" && <Bike className="w-6 h-6" />}
+                      {activeQuoteType === "vehiculos" && (vehicleKind === "carro" ? <Car className="w-6 h-6" /> : <Bike className="w-6 h-6" />)}
                       {activeQuoteType === "salud" && <HeartPulse className="w-6 h-6" />}
+                      {activeQuoteType === "empresarial" && <Building2 className="w-6 h-6" />}
+                      {activeQuoteType === "arl" && <ShieldCheck className="w-6 h-6" />}
                     </div>
                     <div>
                       <span className="text-xs md:text-sm font-extrabold uppercase tracking-widest text-[#939BB4]">
                         Paso {currentStep} de 2 • {currentStep === 1 ? "Identificación" : "Riesgo Técnico"}
                       </span>
                       <h3 className="text-xl font-black text-[#0F1740]">
-                        {activeQuoteType === "autos" && "Seguro de Autos Express"}
-                        {activeQuoteType === "motos" && "Seguro de Motos Express"}
+                        {activeQuoteType === "vehiculos" && "Seguro de Auto y Moto Express"}
                         {activeQuoteType === "salud" && "Planes de Salud Express"}
+                        {activeQuoteType === "empresarial" && "Seguro Empresarial Express"}
+                        {activeQuoteType === "arl" && "Intermediación ARL de Ley"}
                       </h3>
                     </div>
                   </div>
@@ -555,9 +599,44 @@ export default function EstimatorCalculator({ onSaveConsultation }: EstimatorCal
                 {/* PASO 2: DETALLES DEL RIESGO COBERTURA */}
                 {currentStep === 2 && (
                   <div className="space-y-5">
-                    
+
+                    {/* SELECTOR CARRO / MOTO (solo para vehículos) */}
+                    {activeQuoteType === "vehiculos" && (
+                      <div>
+                        <label className="text-xs md:text-sm font-bold text-gray-700 flex items-center uppercase tracking-wider mb-2">
+                          <Shield className="w-3.5 h-3.5 mr-1 text-slate-400" /> ¿Qué vehículo quieres asegurar?
+                        </label>
+                        <div className="grid grid-cols-2 gap-3">
+                          <button
+                            type="button"
+                            onClick={() => setVehicleKind("carro")}
+                            className={`py-3 px-4 rounded-2xl flex items-center justify-center space-x-2 border transition-all cursor-pointer text-xs font-extrabold ${
+                              vehicleKind === "carro"
+                                ? "bg-blue-50/60 border-brand-blue text-brand-blue ring-1 ring-brand-blue"
+                                : "bg-white border-slate-200 text-slate-500 hover:bg-slate-50"
+                            }`}
+                          >
+                            <Car className="w-4.5 h-4.5" />
+                            <span>CARRO</span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setVehicleKind("moto")}
+                            className={`py-3 px-4 rounded-2xl flex items-center justify-center space-x-2 border transition-all cursor-pointer text-xs font-extrabold ${
+                              vehicleKind === "moto"
+                                ? "bg-emerald-50/60 border-emerald-600 text-emerald-700 ring-1 ring-emerald-600"
+                                : "bg-white border-slate-200 text-slate-500 hover:bg-slate-50"
+                            }`}
+                          >
+                            <Bike className="w-4.5 h-4.5" />
+                            <span>MOTO</span>
+                          </button>
+                        </div>
+                      </div>
+                    )}
+
                     {/* AUTOS FORM CONTROLS */}
-                    {activeQuoteType === "autos" && (
+                    {activeQuoteType === "vehiculos" && vehicleKind === "carro" && (
                       <form onSubmit={handleSaveAutoQuote} className="space-y-4">
                         
                         {/* Placa Input Custom Estilo Colombia */}
@@ -691,7 +770,7 @@ export default function EstimatorCalculator({ onSaveConsultation }: EstimatorCal
                     )}
 
                     {/* MOTOS FORM CONTROLS */}
-                    {activeQuoteType === "motos" && (
+                    {activeQuoteType === "vehiculos" && vehicleKind === "moto" && (
                       <form onSubmit={handleSaveMotoQuote} className="space-y-4">
                         
                         {/* Placa Input Custom Estilo Colombia */}
@@ -926,6 +1005,188 @@ export default function EstimatorCalculator({ onSaveConsultation }: EstimatorCal
                       </form>
                     )}
 
+                    {/* EMPRESARIAL FORM CONTROLS */}
+                    {activeQuoteType === "empresarial" && (
+                      <form onSubmit={handleSaveEmpresarialQuote} className="space-y-4">
+                        {/* Sector selection */}
+                        <div>
+                          <label className="text-xs md:text-sm font-bold text-gray-700 flex items-center uppercase tracking-wider mb-2">
+                            <Building2 className="w-3.5 h-3.5 mr-1 text-slate-400" /> Sector o Actividad Económica
+                          </label>
+                          <div className="grid grid-cols-2 gap-2">
+                            {[
+                              { id: "comercio", label: "Comercio / Oficinas", desc: "Locales y bodegas" },
+                              { id: "fabrica", label: "Fábrica / Industria", desc: "Manufactura" },
+                              { id: "servicios", label: "Servicios", desc: "Consultorías" },
+                              { id: "construccion", label: "Construcción", desc: "Obra civil" }
+                            ].map((item) => (
+                              <button
+                                type="button"
+                                key={item.id}
+                                onClick={() => setEmpresaSector(item.id)}
+                                className={`p-2.5 rounded-2xl border text-left transition-all ${
+                                  empresaSector === item.id
+                                    ? "border-violet-600 bg-violet-50/20 ring-1 ring-violet-600"
+                                    : "border-slate-200 hover:bg-slate-50"
+                                }`}
+                              >
+                                <div className="font-extrabold text-xs text-slate-900">{item.label}</div>
+                                <div className="text-[10px] text-violet-600 font-semibold">{item.desc}</div>
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* Insured Assets Value */}
+                        <div>
+                          <div className="flex justify-between items-center mb-1.5">
+                            <label className="text-xs md:text-sm font-bold text-gray-700 flex items-center uppercase tracking-wider">
+                              <Coins className="w-3.5 h-3.5 mr-1 text-slate-400" /> Valor de Activos Asegurables
+                            </label>
+                            <span className="bg-slate-100 text-violet-700 px-2.5 py-0.5 text-xs font-black rounded font-mono">
+                              {empresaAssets}M COP
+                            </span>
+                          </div>
+                          <input
+                            type="range"
+                            min="50"
+                            max="2000"
+                            step="50"
+                            value={empresaAssets}
+                            onChange={(e) => setEmpresaAssets(parseInt(e.target.value))}
+                            className="w-full h-1.5 bg-slate-100 rounded-lg appearance-none cursor-pointer accent-violet-600"
+                          />
+                        </div>
+
+                        {/* Employees count */}
+                        <div>
+                          <div className="flex justify-between items-center mb-1.5">
+                            <label className="text-xs md:text-sm font-bold text-gray-700 flex items-center uppercase tracking-wider">
+                              <Users className="w-3.5 h-3.5 mr-1 text-slate-400" /> Número de Empleados
+                            </label>
+                            <span className="bg-slate-100 text-violet-700 px-2.5 py-0.5 text-xs font-black rounded font-mono">
+                              {empresaEmployees} {empresaEmployees === 1 ? "empleado" : "empleados"}
+                            </span>
+                          </div>
+                          <input
+                            type="range"
+                            min="1"
+                            max="500"
+                            value={empresaEmployees}
+                            onChange={(e) => setEmpresaEmployees(parseInt(e.target.value))}
+                            className="w-full h-1.5 bg-slate-100 rounded-lg appearance-none cursor-pointer accent-violet-600"
+                          />
+                        </div>
+
+                        {/* Submit finalized */}
+                        <div className="pt-4 border-t border-slate-100">
+                          <button
+                            type="submit"
+                            disabled={empresarialSaved}
+                            className={`w-full py-4 rounded-full text-xs font-extrabold text-white transition-all shadow-md ${
+                              empresarialSaved ? "bg-emerald-600 shadow-emerald-100" : "bg-violet-600 hover:bg-violet-700 shadow-violet-100"
+                            }`}
+                          >
+                            {empresarialSaved ? "¡Guardado exitosamente!" : "Generar Comparación y Registrar Propuesta"}
+                          </button>
+                        </div>
+                      </form>
+                    )}
+
+                    {/* ARL FORM CONTROLS */}
+                    {activeQuoteType === "arl" && (
+                      <form onSubmit={handleSaveArlQuote} className="space-y-4">
+                        {/* Risk class selection */}
+                        <div>
+                          <label className="text-xs md:text-sm font-bold text-gray-700 flex items-center uppercase tracking-wider mb-2">
+                            <Shield className="w-3.5 h-3.5 mr-1 text-slate-400" /> Clase de Riesgo de la Actividad
+                          </label>
+                          <div className="grid grid-cols-5 gap-1.5">
+                            {[1, 2, 3, 4, 5].map((level) => (
+                              <button
+                                type="button"
+                                key={level}
+                                onClick={() => setArlRiskClass(level)}
+                                className={`py-2 px-1 rounded-xl border text-center transition-all ${
+                                  arlRiskClass === level
+                                    ? "bg-indigo-600 border-indigo-600 text-white shadow-xs"
+                                    : "bg-white border-slate-200 hover:bg-slate-50 text-slate-700"
+                                }`}
+                              >
+                                <div className="text-xs font-black">{["I", "II", "III", "IV", "V"][level - 1]}</div>
+                                <div className={`text-[9px] font-bold mt-0.5 ${arlRiskClass === level ? "text-indigo-200" : "text-indigo-600"}`}>
+                                  {arlRates[level - 1]}%
+                                </div>
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* Employees count */}
+                        <div>
+                          <div className="flex justify-between items-center mb-1.5">
+                            <label className="text-xs md:text-sm font-bold text-gray-700 flex items-center uppercase tracking-wider">
+                              <Users className="w-3.5 h-3.5 mr-1 text-slate-400" /> Número de Trabajadores
+                            </label>
+                            <span className="bg-slate-100 text-indigo-700 px-2.5 py-0.5 text-xs font-black rounded font-mono">
+                              {arlEmployees} {arlEmployees === 1 ? "trabajador" : "trabajadores"}
+                            </span>
+                          </div>
+                          <input
+                            type="range"
+                            min="1"
+                            max="200"
+                            value={arlEmployees}
+                            onChange={(e) => setArlEmployees(parseInt(e.target.value))}
+                            className="w-full h-1.5 bg-slate-100 rounded-lg appearance-none cursor-pointer accent-indigo-600"
+                          />
+                        </div>
+
+                        {/* Average salary */}
+                        <div>
+                          <div className="flex justify-between items-center mb-1.5">
+                            <label className="text-xs md:text-sm font-bold text-gray-700 flex items-center uppercase tracking-wider">
+                              <Coins className="w-3.5 h-3.5 mr-1 text-slate-400" /> Salario Promedio Mensual
+                            </label>
+                            <span className="bg-slate-100 text-indigo-700 px-2.5 py-0.5 text-xs font-black rounded font-mono">
+                              {formatCOP(arlSalary)}
+                            </span>
+                          </div>
+                          <input
+                            type="range"
+                            min="1300000"
+                            max="8000000"
+                            step="100000"
+                            value={arlSalary}
+                            onChange={(e) => setArlSalary(parseInt(e.target.value))}
+                            className="w-full h-1.5 bg-slate-100 rounded-lg appearance-none cursor-pointer accent-indigo-600"
+                          />
+                        </div>
+
+                        {/* Legal return highlight */}
+                        <div className="bg-indigo-50/60 border border-indigo-100 p-4 rounded-2xl flex items-start space-x-2.5">
+                          <Sparkles className="w-4.5 h-4.5 text-indigo-600 shrink-0 mt-0.5" />
+                          <span className="text-xs md:text-sm text-indigo-800 leading-relaxed font-semibold">
+                            <strong>Retorno de Prevención (9.2% de ley):</strong> recuperarías aprox.{" "}
+                            <strong>{formatCOP(Math.round(calculateArlContribution() * 0.092))}/mes</strong> en capacitaciones y brigadas. Nuestra intermediación te cuesta $0.
+                          </span>
+                        </div>
+
+                        {/* Submit finalized */}
+                        <div className="pt-4 border-t border-slate-100">
+                          <button
+                            type="submit"
+                            disabled={arlSaved}
+                            className={`w-full py-4 rounded-full text-xs font-extrabold text-white transition-all shadow-md ${
+                              arlSaved ? "bg-emerald-600 shadow-emerald-100" : "bg-indigo-600 hover:bg-indigo-700 shadow-indigo-100"
+                            }`}
+                          >
+                            {arlSaved ? "¡Guardado exitosamente!" : "Solicitar Auditoría e Intermediación $0"}
+                          </button>
+                        </div>
+                      </form>
+                    )}
+
                   </div>
                 )}
 
@@ -959,9 +1220,10 @@ export default function EstimatorCalculator({ onSaveConsultation }: EstimatorCal
                         Estimación Oficial Simulada
                       </span>
                       <div className="text-3xl md:text-4xl font-extrabold text-[#0F1740] tracking-tight">
-                        {activeQuoteType === "autos" && formatCOP(calculateAutoPremium())}
-                        {activeQuoteType === "motos" && formatCOP(calculateMotoPremium())}
+                        {activeQuoteType === "vehiculos" && formatCOP(vehicleKind === "carro" ? calculateAutoPremium() : calculateMotoPremium())}
                         {activeQuoteType === "salud" && formatCOP(calculateSaludPremium())}
+                        {activeQuoteType === "empresarial" && formatCOP(calculateEmpresarialPremium())}
+                        {activeQuoteType === "arl" && formatCOP(calculateArlContribution())}
                         <span className="text-xs font-semibold text-slate-400"> /mes*</span>
                       </div>
                       <p className="text-xs text-gray-500 mt-1 leading-normal">
@@ -1005,9 +1267,10 @@ export default function EstimatorCalculator({ onSaveConsultation }: EstimatorCal
                         <div>
                           <p className={`font-bold ${currentStep === 2 ? "text-brand-blue" : "text-slate-900"}`}>Parámetros del Riesgo</p>
                           <p className="text-slate-500 text-xs md:text-sm leading-tight mt-0.5">
-                            {activeQuoteType === "autos" && "Calculas tarifas del auto ingresando la placa, valor y ciudad de tránsito."}
-                            {activeQuoteType === "motos" && "Configuras cilindraje y propósito de uso para optimizar deducciones."}
+                            {activeQuoteType === "vehiculos" && "Eliges carro o moto e ingresas placa y datos para calcular tu tarifa."}
                             {activeQuoteType === "salud" && "Eliges el nivel de amparo familiar y rangos de edad requeridos."}
+                            {activeQuoteType === "empresarial" && "Defines sector, activos y empleados para estructurar tu multirriesgo."}
+                            {activeQuoteType === "arl" && "Configuras clase de riesgo y nómina para auditar tus aportes de ley."}
                           </p>
                         </div>
                       </div>
@@ -1035,14 +1298,14 @@ export default function EstimatorCalculator({ onSaveConsultation }: EstimatorCal
                       Documentos requeridos más adelante
                     </h5>
                     <ul className="text-xs text-slate-600 space-y-1.5">
-                      {activeQuoteType === "autos" && (
+                      {activeQuoteType === "vehiculos" && vehicleKind === "carro" && (
                         <>
                           <li className="flex items-center"><span className="w-1.5 h-1.5 rounded-full bg-blue-500 mr-1.5 shrink-0" /> Tarjeta de Propiedad</li>
                           <li className="flex items-center"><span className="w-1.5 h-1.5 rounded-full bg-blue-500 mr-1.5 shrink-0" /> Cédula del tomador legítimo</li>
                           <li className="flex items-center"><span className="w-1.5 h-1.5 rounded-full bg-blue-500 mr-1.5 shrink-0" /> Inspección digital (Gratis con App broker)</li>
                         </>
                       )}
-                      {activeQuoteType === "motos" && (
+                      {activeQuoteType === "vehiculos" && vehicleKind === "moto" && (
                         <>
                           <li className="flex items-center"><span className="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-1.5 shrink-0" /> Tarjeta de matrícula oficial</li>
                           <li className="flex items-center"><span className="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-1.5 shrink-0" /> Cédula de Ciudadanía del conductor</li>
@@ -1054,6 +1317,20 @@ export default function EstimatorCalculator({ onSaveConsultation }: EstimatorCal
                           <li className="flex items-center"><span className="w-1.5 h-1.5 rounded-full bg-amber-500 mr-1.5 shrink-0" /> Registros civiles de parentesco</li>
                           <li className="flex items-center"><span className="w-1.5 h-1.5 rounded-full bg-amber-500 mr-1.5 shrink-0" /> Declaración básica de preexistencias</li>
                           <li className="flex items-center"><span className="w-1.5 h-1.5 rounded-full bg-amber-500 mr-1.5 shrink-0" /> Cédulas de beneficiarios mayores</li>
+                        </>
+                      )}
+                      {activeQuoteType === "empresarial" && (
+                        <>
+                          <li className="flex items-center"><span className="w-1.5 h-1.5 rounded-full bg-violet-500 mr-1.5 shrink-0" /> Cámara de Comercio (menor a 30 días)</li>
+                          <li className="flex items-center"><span className="w-1.5 h-1.5 rounded-full bg-violet-500 mr-1.5 shrink-0" /> RUT actualizado de la empresa</li>
+                          <li className="flex items-center"><span className="w-1.5 h-1.5 rounded-full bg-violet-500 mr-1.5 shrink-0" /> Relación de activos e inventarios</li>
+                        </>
+                      )}
+                      {activeQuoteType === "arl" && (
+                        <>
+                          <li className="flex items-center"><span className="w-1.5 h-1.5 rounded-full bg-indigo-500 mr-1.5 shrink-0" /> Planilla PILA del último mes</li>
+                          <li className="flex items-center"><span className="w-1.5 h-1.5 rounded-full bg-indigo-500 mr-1.5 shrink-0" /> Clasificación de actividad económica (CIIU)</li>
+                          <li className="flex items-center"><span className="w-1.5 h-1.5 rounded-full bg-indigo-500 mr-1.5 shrink-0" /> Certificado de la ARL actual</li>
                         </>
                       )}
                     </ul>
@@ -1077,7 +1354,8 @@ export default function EstimatorCalculator({ onSaveConsultation }: EstimatorCal
             </motion.div>
           </div>
         )}
-      </AnimatePresence>
+      </AnimatePresence>,
+      document.body)}
 
     </div>
   );

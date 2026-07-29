@@ -1,7 +1,10 @@
 import React, { useState } from "react";
 import { motion } from "motion/react";
-import { Car, Bike, ArrowLeft, ShieldCheck, Sparkles, AlertCircle, CheckCircle2 } from "lucide-react";
+import { Car, Bike, Sparkles, AlertCircle, CheckCircle2, MessageCircle } from "lucide-react";
 import { ConsultationRequest } from "../types";
+
+const WHATSAPP_NUMBER = "573057883941";
+const WHATSAPP_MESSAGE = "Hola Conseguros, quiero cotizar un seguro para mi carro o moto. ¿Me pueden ayudar?";
 
 interface HeroSlideVehiclesProps {
   onBack: () => void;
@@ -72,67 +75,54 @@ export default function HeroSlideVehicles({ onBack, onSaveRequest }: HeroSlideVe
   };
 
   return (
-    <div className="w-full flex flex-col lg:flex-row items-center justify-between gap-8 md:gap-12 text-left">
+    <div className="w-full flex flex-col lg:flex-row items-center justify-between gap-8 md:gap-12 xl:gap-20 text-left">
       {/* Left Column: Key info list */}
-      <div className="w-full lg:w-[42%] bg-slate-950/60 backdrop-blur-md p-8 md:p-10 rounded-[2.5rem] border border-white/5 shadow-2xl relative overflow-hidden">
-        <div className="absolute top-3 left-3 w-3 h-3 border-t border-l border-white/20 pointer-events-none" />
-        <div className="absolute top-3 right-3 w-3 h-3 border-t border-r border-white/20 pointer-events-none" />
-        <div className="absolute inset-0 bg-[radial-gradient(#ffffff_0.5px,transparent_0.5px)] [background-size:16px_16px] opacity-10 pointer-events-none rounded-[2.5rem]" />
-
-        <button
-          onClick={onBack}
-          className="inline-flex items-center text-xs font-bold text-slate-400 hover:text-white transition-colors mb-6 group cursor-pointer"
-        >
-          <ArrowLeft className="w-4 h-4 mr-2 transform group-hover:-translate-x-1 transition-transform" />
-          Regresar al Menú Principal
-        </button>
-
-        <span className="text-emerald-400 font-extrabold text-xs tracking-[0.25em] uppercase block mb-3 relative z-10">
+      <div className="w-full lg:w-[40%]">
+        <span className="text-emerald-400 font-extrabold text-sm xl:text-base tracking-[0.25em] uppercase block mb-3">
           COTIZACIÓN EXPRÉS DE VEHÍCULOS
         </span>
 
-        <h2 className="text-2xl md:text-3xl text-white font-light mb-4 leading-tight relative z-10">
+        <h2 className="text-3xl md:text-4xl xl:text-5xl text-white font-semibold mb-4 leading-tight">
           Seguros para <br className="hidden sm:inline"/> <span className="font-extrabold text-emerald-400">Carros & Motos</span>
         </h2>
 
-        <p className="text-slate-300 text-xs md:text-sm leading-relaxed mb-6 font-semibold relative z-10">
-          Obtén la prima homologada en minutos. Comparamos tasas reales en tiempo real con datos de Fasecolda para ofrecerte la cobertura ideal.
-        </p>
-
-        <div className="space-y-3 mb-6 relative z-10 text-xs md:text-sm text-slate-300">
+        <div className="space-y-3 mb-6 text-xs md:text-sm text-slate-300">
           <div className="flex items-start space-x-3">
             <span className="text-emerald-400 mt-1">✓</span>
-            <p className="text-xs font-semibold">
+            <p className="text-sm md:text-base xl:text-lg font-bold">
               <strong className="text-white">Repuestos de marca:</strong> Reparaciones en talleres oficiales con repuestos directos.
             </p>
           </div>
           <div className="flex items-start space-x-3">
             <span className="text-emerald-400 mt-1">✓</span>
-            <p className="text-xs font-semibold">
+            <p className="text-sm md:text-base xl:text-lg font-bold">
               <strong className="text-white">Asistencia total:</strong> Grúa nacional, auxilio vial y conductor elegido sin límites.
             </p>
           </div>
           <div className="flex items-start space-x-3">
             <span className="text-emerald-400 mt-1">✓</span>
-            <p className="text-xs font-semibold">
+            <p className="text-sm md:text-base xl:text-lg font-bold">
               <strong className="text-white">Defensa legal:</strong> Abogado in situ y amparo jurídico civil y penal 24/7.
             </p>
           </div>
         </div>
 
-        <button
-          onClick={onBack}
-          className="inline-flex items-center text-xs font-extrabold text-slate-400 hover:text-white bg-white/5 hover:bg-white/10 px-5 py-3 rounded-full border border-white/10 transition-all cursor-pointer"
+        <a
+          href={`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(WHATSAPP_MESSAGE)}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-2 text-emerald-300 hover:text-white bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-400/30 hover:border-emerald-400/60 px-4 py-2.5 rounded-full text-xs md:text-sm font-bold transition-all"
         >
-          Ver otras categorías
-        </button>
+          <MessageCircle className="w-4 h-4 md:w-4.5 md:h-4.5" />
+          <span>Escríbenos por WhatsApp</span>
+        </a>
       </div>
 
       {/* Right Column: Dynamic Quote Form Panel */}
-      <div className="w-full lg:w-[54%]">
+      <div className="w-full lg:w-[56%]">
         <motion.div
           layout
-          className="w-full max-w-lg bg-slate-900/60 backdrop-blur-xl border border-white/10 p-6 rounded-[2rem] shadow-2xl relative overflow-hidden"
+          className="w-full max-w-lg xl:max-w-xl bg-slate-900/60 backdrop-blur-xl border border-white/10 p-6 xl:p-8 rounded-[2rem] shadow-2xl relative overflow-hidden"
         >
           <div className="absolute -right-12 -top-12 w-32 h-32 rounded-full bg-gradient-to-tr from-emerald-500/10 to-transparent blur-2xl opacity-60 pointer-events-none" />
 

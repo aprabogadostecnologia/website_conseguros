@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "motion/react";
 import { X, CheckSquare, ArrowRight, BookOpen, AlertCircle, FileSpreadsheet, Sparkles } from "lucide-react";
 import { AdvisoryStep } from "../types";
@@ -92,7 +93,7 @@ export default function ProcessSection() {
   const activeStep = steps.find((s) => s.id === activeStepId);
 
   return (
-    <section className="py-16 md:py-20 px-8 md:px-16 bg-surface relative overflow-hidden" id="proceso">
+    <section className="py-12 md:py-14 px-8 md:px-16 bg-surface relative overflow-hidden" id="proceso">
       <style>{`
         @keyframes routeFlow {
           from {
@@ -198,22 +199,24 @@ export default function ProcessSection() {
               viewport={{ once: true }}
               transition={{ delay: idx * 0.1, duration: 0.5 }}
               whileHover={{ y: -6 }}
-              className="bg-white/92 backdrop-blur-md p-8 rounded-[2rem] border border-gray-100/90 shadow-xs flex flex-col items-center text-center relative group transition-all"
+              style={{ ["--accent" as string]: item.accentColor }}
+              className="process-step-card bg-white/92 backdrop-blur-md p-8 rounded-[2rem] border border-gray-100/90 shadow-xs flex flex-col items-center text-center relative group"
             >
-              <div className="w-full flex justify-between items-start mb-12">
+              <div className="w-full flex justify-center mb-8">
                 <span className="text-[10px] font-extrabold text-gray-400 tracking-widest uppercase">
                   CONSEGUROS
                 </span>
-                <span className={`px-3 py-1 ${item.badgeBg} ${item.textCol} text-xs font-bold rounded-full`}>
-                  {item.number}
-                </span>
               </div>
-              
-              <div className="w-16 h-16 bg-slate-50/80 rounded-2xl flex items-center justify-center mb-6 shadow-xs border border-gray-100/30 group-hover:border-brand-blue/20 transition-all">
-                <span className="material-symbols-outlined text-gray-700 text-3xl">
+
+              <div className="process-step-icon-box w-16 h-16 bg-slate-50/80 rounded-2xl flex items-center justify-center mb-5 shadow-xs border border-gray-100/30">
+                <span className="process-step-icon material-symbols-outlined text-gray-700 text-3xl">
                   {item.icon}
                 </span>
               </div>
+
+              <span className={`process-step-badge px-4 py-1.5 ${item.badgeBg} ${item.textCol} text-sm font-black rounded-full mb-5`}>
+                {item.number}
+              </span>
 
               <h4 className="text-xl font-bold text-[#0F1740] mb-12 leading-snug">
                 {item.title}
@@ -232,7 +235,8 @@ export default function ProcessSection() {
           ))}
         </div>
 
-        {/* Dynamic Detail Centered Modal */}
+        {/* Dynamic Detail Centered Modal (portal a body para escapar del stacking context de la sección) */}
+        {createPortal(
         <AnimatePresence>
           {activeStepId && activeStep && (
             <motion.div
@@ -316,7 +320,8 @@ export default function ProcessSection() {
               </motion.div>
             </motion.div>
           )}
-        </AnimatePresence>
+        </AnimatePresence>,
+        document.body)}
       </div>
     </section>
   );

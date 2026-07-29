@@ -233,6 +233,47 @@
 }
 
 /* ----------------------------------------------
+  Floating Particle Field (Blue Bar background ambience)
+  Adapted from a Pug/SCSS particle field: instead of per-particle
+  SCSS @for keyframes, each <span> carries its own randomized CSS
+  custom properties and shares two generic keyframes.
+* ---------------------------------------------- */
+.hero-particle-field {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.hero-particle {
+  position: absolute;
+  top: var(--top);
+  left: var(--left);
+  width: var(--size);
+  height: var(--size);
+  border-radius: 9999px;
+  background: var(--particle-color);
+  animation: hero-particle-float var(--duration) ease-in-out infinite,
+             hero-particle-fade var(--duration) ease-in-out infinite;
+  animation-delay: var(--delay);
+  will-change: transform, opacity;
+}
+
+@keyframes hero-particle-float {
+  0% { transform: translate3d(0, 0, 0) rotate(0deg); }
+  50% { transform: translate3d(var(--tx), var(--ty), var(--tz)) rotate(var(--rot)); }
+  100% { transform: translate3d(0, 0, 0) rotate(0deg); }
+}
+
+@keyframes hero-particle-fade {
+  0%, 100% { opacity: 0; }
+  25% { opacity: 0.5; }
+  50% { opacity: 1; }
+  75% { opacity: 0.5; }
+}
+
+/* ----------------------------------------------
   Interactive Hero Bento Panels Styling
 * ---------------------------------------------- */
 .hero-grid-panels {
@@ -314,4 +355,98 @@
   display: flex;
   flex-direction: column;
   justify-content: space-between;
+}
+
+/* ----------------------------------------------
+  "¿Quiénes somos?" interactive parallax photo gallery (6 photos).
+  Each photo sits at a different "depth": moving the mouse over the
+  scene shifts each one at a speed proportional to its depth (handled
+  in JS via refs). At rest / on touch devices, a gentle idle float
+  keeps the scene alive.
+* ---------------------------------------------- */
+.nosotros-parallax-scene {
+  position: relative;
+  width: var(--gallery-size, 300px);
+  height: var(--gallery-size, 300px);
+}
+
+.nosotros-parallax-item {
+  position: absolute;
+  animation: nosotros-parallax-float 6s ease-in-out infinite;
+}
+
+.nosotros-parallax-item-inner {
+  width: 100%;
+  height: 100%;
+  border-radius: 1.25rem;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  box-shadow: 0 20px 40px rgba(15, 23, 64, 0.18);
+  background: #f8f9fa;
+  transition: transform 120ms ease-out;
+  will-change: transform;
+}
+
+.nosotros-parallax-item-inner img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+}
+
+@keyframes nosotros-parallax-float {
+  0%, 100% { transform: translateY(0) rotate(var(--rot, 0deg)); }
+  50% { transform: translateY(-10px) rotate(var(--rot, 0deg)); }
+}
+
+@media (min-width: 640px) {
+  .nosotros-parallax-scene { --gallery-size: 380px; }
+}
+
+@media (min-width: 768px) {
+  .nosotros-parallax-scene { --gallery-size: 460px; }
+}
+
+@media (min-width: 1024px) {
+  .nosotros-parallax-scene { --gallery-size: 540px; }
+}
+
+/* ----------------------------------------------
+  "Procedimiento" step cards: on hover, each card tints itself with its
+  own --accent color (set inline per card from data), instead of a single
+  generic hover color shared by all 5.
+* ---------------------------------------------- */
+.process-step-card {
+  transition: background-color 400ms ease, border-color 400ms ease, box-shadow 400ms ease;
+}
+
+.process-step-card:hover {
+  background-color: color-mix(in srgb, var(--accent) 8%, white);
+  border-color: color-mix(in srgb, var(--accent) 40%, white);
+  box-shadow: 0 20px 40px color-mix(in srgb, var(--accent) 20%, transparent);
+}
+
+.process-step-icon-box {
+  transition: background-color 350ms ease, transform 350ms ease;
+}
+
+.process-step-card:hover .process-step-icon-box {
+  background-color: var(--accent);
+  transform: scale(1.05);
+}
+
+.process-step-icon {
+  transition: color 350ms ease;
+}
+
+.process-step-card:hover .process-step-icon {
+  color: white;
+}
+
+.process-step-badge {
+  transition: transform 350ms ease;
+}
+
+.process-step-card:hover .process-step-badge {
+  transform: scale(1.08);
 }

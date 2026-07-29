@@ -76,12 +76,12 @@ export default function QuestionsAndContactSection({ onSaveConsultation }: Quest
   };
 
   return (
-    <section className="py-20 md:py-24 px-8 md:px-16 bg-slate-50 relative overflow-hidden" id="contacto">
+    <section className="py-14 md:py-16 px-8 md:px-16 bg-slate-50 relative overflow-hidden" id="contacto">
       {/* Elegante Divisor Curvo Superior (Transición orgánica desde ProcessSection blanco) */}
       <div className="absolute top-0 left-0 w-full overflow-hidden leading-[0] select-none pointer-events-none transform rotate-180 z-20">
         <svg className="relative block w-[calc(100%+1.3px)] h-[40px] md:h-[64px]" viewBox="0 0 1200 120" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
           <path 
-            d="M321.39,56.44c58-10.79,114.16-30.13,172-41.86,82.39-16.72,168.19-17.73,250.45-.39C823.78,31,906.67,72,985.66,92.83c70.05,18.48,146.53,26.09,214.34,3v80H0V0C26.9,8.75,53.05,22,79.54,34c61.64,28,125,51.34,198.85,58.33A516.86,516.86,0,0,0,321.39,56.44Z" 
+            d="M0,32 C300,110 900,-10 1200,68 L1200,120 L0,120 Z"
             className="fill-white"
           ></path>
         </svg>
@@ -91,7 +91,7 @@ export default function QuestionsAndContactSection({ onSaveConsultation }: Quest
       <div className="absolute bottom-0 left-0 w-full overflow-hidden leading-[0] select-none pointer-events-none z-20">
         <svg className="relative block w-[calc(100%+1.3px)] h-[40px] md:h-[64px]" viewBox="0 0 1200 120" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
           <path 
-            d="M321.39,56.44c58-10.79,114.16-30.13,172-41.86,82.39-16.72,168.19-17.73,250.45-.39C823.78,31,906.67,72,985.66,92.83c70.05,18.48,146.53,26.09,214.34,3v80H0V0C26.9,8.75,53.05,22,79.54,34c61.64,28,125,51.34,198.85,58.33A516.86,516.86,0,0,0,321.39,56.44Z" 
+            d="M0,32 C300,110 900,-10 1200,68 L1200,120 L0,120 Z"
             className="fill-[#121ccf]"
           ></path>
         </svg>
@@ -191,7 +191,7 @@ export default function QuestionsAndContactSection({ onSaveConsultation }: Quest
                 </div>
                 <div>
                   <h4 className="text-xs font-black text-emerald-800 uppercase">Soporte WhatsApp 24/7</h4>
-                  <p className="text-[11px] md:text-xs text-emerald-600 font-bold mt-0.5">+57 321 000 0000 • Bogotá, CO</p>
+                  <p className="text-[11px] md:text-xs text-emerald-600 font-bold mt-0.5">+57 3057883941 • Bogotá, CO</p>
                 </div>
               </div>
             </div>
