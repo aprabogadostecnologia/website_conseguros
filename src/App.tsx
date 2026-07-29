@@ -717,7 +717,7 @@ export default function App() {
           {/* Col 1: Logo & Tagline (takes 5 cols) */}
           <div className="md:col-span-5 flex flex-col items-center md:items-start select-none">
             <img 
-              src="/images/conegurosSinFondo.png" 
+              src="/public/images/conegurosSinFondo.png" 
               alt="Conseguros" 
               className="h-16 md:h-22 w-auto object-contain brightness-0 invert transition-transform hover:scale-[1.01]" 
               referrerPolicy="no-referrer" 
