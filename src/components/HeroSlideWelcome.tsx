@@ -118,7 +118,7 @@ export default function HeroSlideWelcome({ onSelectSlide, onScrollToContact }: H
           <div className="relative mb-4 flex items-center justify-center">
             <div className="absolute inset-0 bg-[#121ccf]/5 rounded-full filter blur-2xl w-64 h-64 md:w-96 md:h-96 xl:w-[28rem] xl:h-[28rem] pointer-events-none animate-pulse" />
             <img
-              src="/images/log%20sin%20fondo.png"
+              src={`${import.meta.env.BASE_URL}images/log%20sin%20fondo.png`}
               alt="Conseguros Logo"
               className="w-52 h-52 md:w-80 md:h-80 lg:w-88 lg:h-88 xl:w-[22rem] xl:h-[22rem] object-contain relative z-10 select-none drop-shadow-[0_12px_24px_rgba(18,28,207,0.08)]"
               referrerPolicy="no-referrer"

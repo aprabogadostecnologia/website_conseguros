@@ -2,8 +2,8 @@ import React, { useState } from "react";
 import { motion } from "motion/react";
 import { Sparkles, AlertCircle, CheckCircle2, MessageCircle } from "lucide-react";
 import { ConsultationRequest } from "../types";
+import { SHOW_EMAIL_FIELDS, WHATSAPP_NUMBER } from "../constants";
 
-const WHATSAPP_NUMBER = "573057883941";
 const WHATSAPP_MESSAGE = "Hola Conseguros, quiero cotizar un seguro empresarial para mi negocio. ¿Me pueden ayudar?";
 
 interface HeroSlideBusinessProps {
@@ -26,7 +26,7 @@ export default function HeroSlideBusiness({ onBack, onSaveRequest }: HeroSlideBu
       setWarning("Por favor ingresa el nombre o NIT de la empresa.");
       return;
     }
-    if (!businessEmail.trim() || !businessEmail.includes("@")) {
+    if (SHOW_EMAIL_FIELDS && (!businessEmail.trim() || !businessEmail.includes("@"))) {
       setWarning("Por favor ingresa un correo corporativo válido.");
       return;
     }
@@ -157,18 +157,30 @@ export default function HeroSlideBusiness({ onBack, onSaveRequest }: HeroSlideBu
               </div>
 
               {/* Email Input */}
-              <div>
-                <label className="block text-[11px] text-slate-400 font-black uppercase tracking-wide mb-1.5">
-                  Correo Electrónico Corporativo
-                </label>
-                <input
-                  type="email"
-                  value={businessEmail}
-                  onChange={(e) => setBusinessEmail(e.target.value)}
-                  placeholder="Ej: gerencia@empresa.com"
-                  className="w-full bg-slate-950/50 border border-white/10 rounded-xl px-4 py-2.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-blue-400"
-                />
-              </div>
+              {SHOW_EMAIL_FIELDS ? (
+                <div>
+                  <label className="block text-[11px] text-slate-400 font-black uppercase tracking-wide mb-1.5">
+                    Correo Electrónico Corporativo
+                  </label>
+                  <input
+                    type="email"
+                    value={businessEmail}
+                    onChange={(e) => setBusinessEmail(e.target.value)}
+                    placeholder="Ej: gerencia@empresa.com"
+                    className="w-full bg-slate-950/50 border border-white/10 rounded-xl px-4 py-2.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-blue-400"
+                  />
+                </div>
+              ) : (
+                <a
+                  href={`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(WHATSAPP_MESSAGE)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-full bg-emerald-600/90 hover:bg-emerald-600 text-white py-3 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/10"
+                >
+                  <MessageCircle className="w-4 h-4" />
+                  <span>Prefiero escribir por WhatsApp</span>
+                </a>
+              )}
 
               {/* poliza*/}
               <div>
@@ -228,7 +240,9 @@ export default function HeroSlideBusiness({ onBack, onSaveRequest }: HeroSlideBu
                     <strong className="text-white">2. Comparativo multimarca:</strong> Licitaremos tu póliza ante SURA, Allianz, Seguros Bolívar y AXA Colpatria.
                   </p>
                   <p>
-                    <strong className="text-white">3. Presentación formal:</strong> Enviaremos al correo <strong className="text-white">{businessEmail}</strong> el comparativo técnico-médico detallado de deducibles y coberturas.
+                    <strong className="text-white">3. Presentación formal:</strong> {SHOW_EMAIL_FIELDS
+                      ? <>Enviaremos al correo <strong className="text-white">{businessEmail}</strong> el comparativo técnico-médico detallado de deducibles y coberturas.</>
+                      : "Te compartiremos por WhatsApp el comparativo técnico-médico detallado de deducibles y coberturas."}
                   </p>
                 </div>
               </div>

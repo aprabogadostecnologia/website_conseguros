@@ -2,6 +2,7 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { X, CheckCircle, Shield, Building2, Users2, AlertTriangle, ArrowRight, ArrowLeft } from "lucide-react";
 import { ConsultationRequest } from "../types";
+import { SHOW_EMAIL_FIELDS, WHATSAPP_NUMBER } from "../constants";
 
 interface WizardModalProps {
   isOpen: boolean;
@@ -30,7 +31,7 @@ export default function WizardModal({ isOpen, onClose, onSaveConsultation }: Wiz
       setErrorComp("");
     }
 
-    if (!email.trim() || !email.includes("@")) {
+    if (SHOW_EMAIL_FIELDS && (!email.trim() || !email.includes("@"))) {
       setErrorEmail("Ingresa un correo electrónico válido");
       valid = false;
     } else {
@@ -161,7 +162,7 @@ export default function WizardModal({ isOpen, onClose, onSaveConsultation }: Wiz
                 </div>
                 <h4 className="text-2xl font-bold text-gray-900 mb-2">¡Analizando tu entorno!</h4>
                 <p className="text-gray-600 max-w-md mx-auto mb-6">
-                  Hemos generado tu perfil proactivo para <strong>{companyName}</strong>. Un asesor experto se pondrá en contacto contigo en <strong>{email}</strong> con la comparativa del <strong>Top 3 de Colombia</strong>.
+                  Hemos generado tu perfil proactivo para <strong>{companyName}</strong>. Un asesor experto se pondrá en contacto contigo {SHOW_EMAIL_FIELDS ? <>en <strong>{email}</strong></> : "por WhatsApp"} con la comparativa del <strong>Top 3 de Colombia</strong>.
                 </p>
                 <div className="p-4 bg-slate-50 rounded-2xl max-w-sm mx-auto text-left border border-slate-200/60 mb-8 space-y-2">
                   <div className="text-sm text-gray-400 font-bold uppercase tracking-wide">Resumen del Perfil</div>
@@ -204,20 +205,37 @@ export default function WizardModal({ isOpen, onClose, onSaveConsultation }: Wiz
                         />
                         {errorComp && <p className="text-sm text-rose-500 mt-1">{errorComp}</p>}
                       </div>
-                      <div>
-                        <label className="block text-sm font-bold text-gray-700 uppercase tracking-wider mb-2">Correo Corporativo</label>
-                        <input
-                          type="email"
-                          value={email}
-                          onChange={(e) => {
-                            setEmail(e.target.value);
-                            setErrorEmail("");
-                          }}
-                          placeholder="contacto@empresa.com"
-                          className="w-full px-4 py-3 rounded-2xl border border-gray-200 focus:outline-none focus:border-brand-blue focus:ring-1 focus:ring-brand-blue font-medium transition-colors"
-                        />
-                        {errorEmail && <p className="text-sm text-rose-500 mt-1">{errorEmail}</p>}
-                      </div>
+                      {SHOW_EMAIL_FIELDS ? (
+                        <div>
+                          <label className="block text-sm font-bold text-gray-700 uppercase tracking-wider mb-2">Correo Corporativo</label>
+                          <input
+                            type="email"
+                            value={email}
+                            onChange={(e) => {
+                              setEmail(e.target.value);
+                              setErrorEmail("");
+                            }}
+                            placeholder="contacto@empresa.com"
+                            className="w-full px-4 py-3 rounded-2xl border border-gray-200 focus:outline-none focus:border-brand-blue focus:ring-1 focus:ring-brand-blue font-medium transition-colors"
+                          />
+                          {errorEmail && <p className="text-sm text-rose-500 mt-1">{errorEmail}</p>}
+                        </div>
+                      ) : (
+                        <div>
+                          <label className="block text-sm font-bold text-gray-700 uppercase tracking-wider mb-2">¿Prefieres hablar por WhatsApp?</label>
+                          <a
+                            href={`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(`Hola Conseguros, quiero un análisis de riesgo para ${companyName || "mi empresa"}.`)}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="w-full bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-3 rounded-2xl text-sm font-bold transition-all flex items-center justify-center gap-2 shadow-md shadow-emerald-100"
+                          >
+                            <svg className="w-4.5 h-4.5 fill-current" viewBox="0 0 24 24">
+                              <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946C.003 5.156 5.156 0 11.487 0c3.069.001 5.95 1.192 8.113 3.359s3.355 5.047 3.353 8.117c-.003 6.326-5.157 11.482-11.487 11.482-2.001 0-3.971-.521-5.719-1.517L0 24zm6.59-4.846c1.6.95 3.1 1.45 4.881 1.458 5.176 0 9.385-4.207 9.388-9.392.002-2.511-.973-4.87-2.748-6.649-1.776-1.779-4.137-2.757-6.65-2.759-5.176 0-9.386 4.207-9.389 9.393-.001 1.83.493 3.385 1.477 4.966l-.997 3.642 3.738-.981c.001 0 .001 0 0 0zm10.74-6.853c-.3-.15-1.78-.88-2.05-.98-.28-.1-.47-.15-.67.15-.2.3-.77.98-.95 1.18-.18.2-.35.23-.65.08-.3-.15-1.27-.47-2.42-1.5-1-.89-1.66-2-1.86-2.3-.2-.3-.02-.47.13-.62.14-.13.3-.35.45-.53.15-.18.2-.3.3-.5.1-.2.05-.38-.02-.53-.07-.15-.67-1.62-.92-2.22-.25-.6-.5-.52-.67-.53l-.57-.01c-.2 0-.52.07-.8.37-.27.3-1.05 1.03-1.05 2.51s1.08 2.92 1.23 3.12c.15.2 2.13 3.25 5.17 4.56.72.31 1.28.5 1.72.64.73.23 1.39.2 1.92.12.58-.09 1.78-.73 2.03-1.43.25-.7.25-1.3.17-1.43-.08-.13-.28-.2-.58-.35z"/>
+                            </svg>
+                            <span>Escríbenos por WhatsApp</span>
+                          </a>
+                        </div>
+                      )}
                     </div>
                   </motion.div>
                 )}

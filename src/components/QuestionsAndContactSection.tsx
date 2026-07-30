@@ -9,6 +9,7 @@ import {
   HelpCircle
 } from "lucide-react";
 import { ConsultationRequest } from "../types";
+import { SHOW_EMAIL_FIELDS, WHATSAPP_NUMBER } from "../constants";
 
 interface QuestionsAndContactSectionProps {
   onSaveConsultation: (req: ConsultationRequest) => void;
@@ -197,31 +198,45 @@ export default function QuestionsAndContactSection({ onSaveConsultation }: Quest
             </div>
 
             {/* Form Area */}
-            <form onSubmit={handleContactSubmit} className="space-y-3.5">
-              <label className="block text-xs font-black text-gray-700 uppercase tracking-wide text-center">
-                Ingresa tu Email Corporativo
-              </label>
-              <div className="relative flex items-center">
-                <input
-                  type="email"
-                  required
-                  value={contactEmail}
-                  onChange={(e) => setContactEmail(e.target.value)}
-                  className="w-full bg-slate-50 border border-gray-200 hover:border-gray-300 focus:border-brand-blue focus:ring-1 focus:ring-brand-blue rounded-2xl pl-5 pr-12 py-4 text-sm font-semibold text-gray-900 outline-none transition-all placeholder:text-gray-400"
-                  placeholder="ejemplo@empresa.com"
-                />
-                <button
-                  type="submit"
-                  className="absolute right-2.5 top-2.5 bottom-2.5 w-10 h-10 rounded-xl bg-brand-blue hover:bg-blue-800 text-white flex items-center justify-center transition-all shadow-xs cursor-pointer"
-                  aria-label="Registrar asesoría"
-                >
-                  <Send className="w-4 h-4" />
-                </button>
-              </div>
-              <p className="text-[11px] text-gray-400 leading-normal text-center">
-                Al agendar, autorizas el tratamiento de tus datos corporativos de acuerdo a las leyes de Habeas Data en Colombia.
-              </p>
-            </form>
+            {SHOW_EMAIL_FIELDS ? (
+              <form onSubmit={handleContactSubmit} className="space-y-3.5">
+                <label className="block text-xs font-black text-gray-700 uppercase tracking-wide text-center">
+                  Ingresa tu Email Corporativo
+                </label>
+                <div className="relative flex items-center">
+                  <input
+                    type="email"
+                    required
+                    value={contactEmail}
+                    onChange={(e) => setContactEmail(e.target.value)}
+                    className="w-full bg-slate-50 border border-gray-200 hover:border-gray-300 focus:border-brand-blue focus:ring-1 focus:ring-brand-blue rounded-2xl pl-5 pr-12 py-4 text-sm font-semibold text-gray-900 outline-none transition-all placeholder:text-gray-400"
+                    placeholder="ejemplo@empresa.com"
+                  />
+                  <button
+                    type="submit"
+                    className="absolute right-2.5 top-2.5 bottom-2.5 w-10 h-10 rounded-xl bg-brand-blue hover:bg-blue-800 text-white flex items-center justify-center transition-all shadow-xs cursor-pointer"
+                    aria-label="Registrar asesoría"
+                  >
+                    <Send className="w-4 h-4" />
+                  </button>
+                </div>
+                <p className="text-[11px] text-gray-400 leading-normal text-center">
+                  Al agendar, autorizas el tratamiento de tus datos corporativos de acuerdo a las leyes de Habeas Data en Colombia.
+                </p>
+              </form>
+            ) : (
+              <a
+                href={`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent("Hola Conseguros, tengo una inquietud y quisiera hablar con un asesor.")}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-full bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-4 rounded-2xl text-sm font-extrabold transition-all shadow-md shadow-emerald-100 text-center flex items-center justify-center gap-2.5"
+              >
+                <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24">
+                  <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946C.003 5.156 5.156 0 11.487 0c3.069.001 5.95 1.192 8.113 3.359s3.355 5.047 3.353 8.117c-.003 6.326-5.157 11.482-11.487 11.482-2.001 0-3.971-.521-5.719-1.517L0 24zm6.59-4.846c1.6.95 3.1 1.45 4.881 1.458 5.176 0 9.385-4.207 9.388-9.392.002-2.511-.973-4.87-2.748-6.649-1.776-1.779-4.137-2.757-6.65-2.759-5.176 0-9.386 4.207-9.389 9.393-.001 1.83.493 3.385 1.477 4.966l-.997 3.642 3.738-.981c.001 0 .001 0 0 0zm10.74-6.853c-.3-.15-1.78-.88-2.05-.98-.28-.1-.47-.15-.67.15-.2.3-.77.98-.95 1.18-.18.2-.35.23-.65.08-.3-.15-1.27-.47-2.42-1.5-1-.89-1.66-2-1.86-2.3-.2-.3-.02-.47.13-.62.14-.13.3-.35.45-.53.15-.18.2-.3.3-.5.1-.2.05-.38-.02-.53-.07-.15-.67-1.62-.92-2.22-.25-.6-.5-.52-.67-.53l-.57-.01c-.2 0-.52.07-.8.37-.27.3-1.05 1.03-1.05 2.51s1.08 2.92 1.23 3.12c.15.2 2.13 3.25 5.17 4.56.72.31 1.28.5 1.72.64.73.23 1.39.2 1.92.12.58-.09 1.78-.73 2.03-1.43.25-.7.25-1.3.17-1.43-.08-.13-.28-.2-.58-.35z"/>
+                </svg>
+                <span>Escríbenos por WhatsApp</span>
+              </a>
+            )}
 
             {/* Success prompt inside Card */}
             <AnimatePresence>

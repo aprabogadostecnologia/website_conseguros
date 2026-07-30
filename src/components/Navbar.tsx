@@ -29,9 +29,9 @@ export default function Navbar({ onOpenWizard, onSaveConsultation, onOpenSiniest
           className="flex items-center cursor-pointer select-none pl-3 md:pl-8" 
           data-purpose="logo-container"
         >
-          <img 
-            src="/images/conegurosSinFondo.png" 
-            alt="Conseguros" 
+          <img
+            src={`${import.meta.env.BASE_URL}images/conegurosSinFondo.png`}
+            alt="Conseguros"
             className="h-11 md:h-15 w-auto object-contain transition-transform hover:scale-[1.03]" 
             referrerPolicy="no-referrer" 
           />
@@ -119,7 +119,7 @@ export default function Navbar({ onOpenWizard, onSaveConsultation, onOpenSiniest
                 <div className="flex items-center justify-between border-b pb-5 mb-6">
                   <div className="text-xl font-extrabold tracking-tight text-[#0F1740]">
                     <img 
-                      src="/images/conegurosSinFondo.png" 
+                      src={`${import.meta.env.BASE_URL}images/conegurosSinFondo.png`}
                       alt="Conseguros" 
                       className="h-11 w-auto object-contain" 
                       referrerPolicy="no-referrer" 
