@@ -35,10 +35,10 @@
     "vite": "^6.2.3"
   },
   "pnpm": {
-    "onlyBuiltDependencies": [
-      "@google/genai",
-      "esbuild",
-      "protobufjs"
-    ]
+    "allowBuilds": {
+      "@google/genai": true,
+      "esbuild": true,
+      "protobufjs": true
+    }
   }
 }
